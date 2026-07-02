@@ -40,15 +40,21 @@ export function facingDirection(ragdoll: Ragdoll, opponent: Ragdoll): 1 | -1 {
   return opponent.points.pelvis.pos.x >= ragdoll.points.pelvis.pos.x ? 1 : -1;
 }
 
-/** Polls one player's scheme and applies any resulting impulses to their ragdoll. */
+/**
+ * Polls one player's scheme and applies any resulting impulses to their
+ * ragdoll, returning whichever actions fired so a caller can react to a
+ * genuine hit (e.g. screen shake) without re-deriving it from input state.
+ */
 export function applyPlayerActions(
   ragdoll: Ragdoll,
   opponent: Ragdoll,
   input: KeyboardInput,
   scheme: ControlScheme,
-): void {
+): ImpulseAction[] {
   const direction = facingDirection(ragdoll, opponent);
-  for (const action of resolveActions(input, scheme)) {
+  const actions = resolveActions(input, scheme);
+  for (const action of actions) {
     applyImpulse(ragdoll, action, direction);
   }
+  return actions;
 }
