@@ -11,6 +11,7 @@ import { isOffArena, isPinnedFlat } from "./duel/koDetection";
 import { advanceMatch, createMatchState, MATCH_OVER_INPUT_DELAY_SECONDS } from "./duel/round";
 import { createKeyboardInput } from "./input/keyboard";
 import { renderDuelScene } from "./render/duel";
+import { createShakeState, shakeOffset, triggerShake, updateShake } from "./render/screenShake";
 import { queryHudElements, renderHud } from "./ui/hud";
 import { wireTouchControls } from "./ui/touchControls";
 
@@ -21,7 +22,14 @@ const stage = createStage(canvas);
 let scene = createDuelScene(stage.width, stage.height);
 let match = createMatchState();
 const keyboard = createKeyboardInput(window);
-wireTouchControls(document, () => scene, () => match.phase);
+const shake = createShakeState();
+const reducedMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+wireTouchControls(
+  document,
+  () => scene,
+  () => match.phase,
+  () => triggerShake(shake),
+);
 const hud = queryHudElements(document);
 
 function startRematch(): void {
@@ -50,8 +58,19 @@ function tick(now: number): void {
 
   while (accumulator >= FIXED_DT) {
     if (match.phase === "fighting") {
-      applyPlayerActions(scene.ragdollA, scene.ragdollB, keyboard, PLAYER_ONE_CONTROLS);
-      applyPlayerActions(scene.ragdollB, scene.ragdollA, keyboard, PLAYER_TWO_CONTROLS);
+      const actionsA = applyPlayerActions(
+        scene.ragdollA,
+        scene.ragdollB,
+        keyboard,
+        PLAYER_ONE_CONTROLS,
+      );
+      const actionsB = applyPlayerActions(
+        scene.ragdollB,
+        scene.ragdollA,
+        keyboard,
+        PLAYER_TWO_CONTROLS,
+      );
+      if (actionsA.length > 0 || actionsB.length > 0) triggerShake(shake);
     } else if (match.phase === "matchOver") {
       // Still consume presses outside "fighting" so a trailing key doesn't
       // queue up and throw a punch the instant the round resumes. A punch/
@@ -68,6 +87,7 @@ function tick(now: number): void {
     }
 
     stepDuel(scene, FIXED_DT);
+    updateShake(shake, FIXED_DT);
 
     const previousPhase = match.phase;
     advanceMatch(
@@ -89,7 +109,7 @@ function tick(now: number): void {
     accumulator -= FIXED_DT;
   }
 
-  renderDuelScene(stage, scene);
+  renderDuelScene(stage, scene, shakeOffset(shake, reducedMotionQuery.matches));
   renderHud(hud, match);
   requestAnimationFrame(tick);
 }

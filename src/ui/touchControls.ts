@@ -33,13 +33,15 @@ export function parseTouchButton(
  * Taps outside `"fighting"` are ignored — the countdown/round-over/match-over
  * phases already gate keyboard input the same way (see main.ts), and a
  * dedicated Rematch button covers the matchOver case touch would otherwise
- * need a separate gesture for. Returns a disposer that removes all the
- * listeners it added.
+ * need a separate gesture for. `onImpulse`, if given, fires after a tap
+ * actually lands an impulse (e.g. to trigger screen shake). Returns a
+ * disposer that removes all the listeners it added.
  */
 export function wireTouchControls(
   root: ParentNode,
   getScene: () => DuelScene,
   getPhase: () => RoundPhase,
+  onImpulse?: () => void,
 ): () => void {
   const buttons = Array.from(root.querySelectorAll<HTMLElement>("[data-player][data-action]"));
   const disposers: Array<() => void> = [];
@@ -55,6 +57,7 @@ export function wireTouchControls(
       const ragdoll = target.player === "A" ? scene.ragdollA : scene.ragdollB;
       const opponent = target.player === "A" ? scene.ragdollB : scene.ragdollA;
       applyImpulse(ragdoll, target.action, facingDirection(ragdoll, opponent));
+      onImpulse?.();
     };
 
     button.addEventListener("pointerdown", handler);
