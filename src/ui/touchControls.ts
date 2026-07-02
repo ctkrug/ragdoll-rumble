@@ -33,9 +33,11 @@ export function parseTouchButton(
  * Taps outside `"fighting"` are ignored — the countdown/round-over/match-over
  * phases already gate keyboard input the same way (see main.ts), and a
  * dedicated Rematch button covers the matchOver case touch would otherwise
- * need a separate gesture for. `onImpulse`, if given, fires after a tap
- * actually lands an impulse (e.g. to trigger screen shake). Returns a
- * disposer that removes all the listeners it added.
+ * need a separate gesture for. `onImpulse`, if given, fires every time a tap
+ * throws an impulse (e.g. to play a swing sound); it fires on the throw
+ * itself, not on a landed hit — main.ts checks contactThisStep on the
+ * following physics step for that. Returns a disposer that removes all the
+ * listeners it added.
  */
 export function wireTouchControls(
   root: ParentNode,

@@ -5,6 +5,7 @@ import {
   isMuted,
   playImpact,
   playKnockout,
+  playSwing,
   playUiClick,
   toggleMute,
 } from "./audio/sfx";
@@ -42,13 +43,18 @@ const reducedMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)")
 window.addEventListener("keydown", () => ensureAudioContext(sfx), { once: true });
 window.addEventListener("pointerdown", () => ensureAudioContext(sfx), { once: true });
 
+// A touch tap applies its impulse immediately (for lowest input latency), but
+// whether it actually landed can only be known after the next physics step
+// resolves ragdoll-vs-ragdoll contact — so it just requests a swing sound now
+// and flags the upcoming tick to check for a connect once stepDuel runs.
+let touchThrewImpulse = false;
 wireTouchControls(
   document,
   () => scene,
   () => match.phase,
   () => {
-    triggerShake(shake);
-    playImpact(sfx);
+    playSwing(sfx);
+    touchThrewImpulse = true;
   },
 );
 const hud = queryHudElements(document);
@@ -86,6 +92,9 @@ function tick(now: number): void {
   lastTime = now;
 
   while (accumulator >= FIXED_DT) {
+    let threwThisTick = touchThrewImpulse;
+    touchThrewImpulse = false;
+
     if (match.phase === "fighting") {
       const actionsA = applyPlayerActions(
         scene.ragdollA,
@@ -100,8 +109,8 @@ function tick(now: number): void {
         PLAYER_TWO_CONTROLS,
       );
       if (actionsA.length > 0 || actionsB.length > 0) {
-        triggerShake(shake);
-        playImpact(sfx);
+        threwThisTick = true;
+        playSwing(sfx);
       }
     } else if (match.phase === "matchOver") {
       // Still consume presses outside "fighting" so a trailing key doesn't
@@ -120,6 +129,14 @@ function tick(now: number): void {
 
     stepDuel(scene, FIXED_DT);
     updateShake(shake, FIXED_DT);
+
+    // A landed hit is a swing that was thrown this tick AND resolved as real
+    // ragdoll-vs-ragdoll contact this step — not just "a button was pressed,"
+    // so a wild miss no longer shakes the screen or plays an impact thud.
+    if (threwThisTick && scene.contactThisStep) {
+      triggerShake(shake);
+      playImpact(sfx);
+    }
 
     const previousPhase = match.phase;
     advanceMatch(
