@@ -19,11 +19,6 @@ export function length(a: Vec2): number {
   return Math.sqrt(a.x * a.x + a.y * a.y);
 }
 
-export function normalize(a: Vec2): Vec2 {
-  const len = length(a);
-  return len === 0 ? { x: 0, y: 0 } : scale(a, 1 / len);
-}
-
 export function dot(a: Vec2, b: Vec2): number {
   return a.x * b.x + a.y * b.y;
 }
