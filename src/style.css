@@ -299,3 +299,26 @@ body {
     0 0 0 2px var(--bg),
     0 0 12px var(--accent-support);
 }
+
+/* Below ~420px, two 3-button groups at the default sizing overflow the
+   viewport (each group is punch/kick/lunge, not the 2-button layout
+   docs/DESIGN.md sketches) — tighten padding/gap/type so both groups of
+   three still fit side by side rather than clipping off-screen. Declared
+   after the base .touch-btn rule so equal-specificity cascade lets it win
+   inside the media query rather than being shadowed by source order. */
+@media (max-width: 420px) {
+  #touch-controls {
+    gap: 6px;
+    padding: 6px;
+  }
+
+  .touch-group {
+    gap: 2px;
+  }
+
+  .touch-btn {
+    padding: 4px 5px;
+    font-size: 10px;
+    letter-spacing: 0.02em;
+  }
+}
