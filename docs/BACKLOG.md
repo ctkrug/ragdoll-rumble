@@ -53,11 +53,20 @@ Turn two rigged ragdolls into an actual playable match.
 - [x] Impulse application: map input actions (punch, kick, lunge) to limb impulses.
       (`src/duel/impulse.ts`, wired into `main.ts`'s fixed-timestep loop via
       `applyPlayerActions`/`wireTouchControls`)
-- [ ] Win condition detection (knocked off-arena or pinned-on-back past a threshold) plus
-      countdown → round → rematch match flow.
+- [x] Win condition detection (knocked off-arena or pinned-on-back past a threshold) plus
+      countdown → round → rematch match flow. (`src/duel/koDetection.ts`'s `isOffArena`/
+      `isPinnedFlat`, `src/duel/round.ts`'s `MatchState`/`advanceMatch` state machine, wired into
+      `main.ts`'s tick loop; HUD in `src/ui/hud.ts` + `index.html`'s `#hud`/`#match-overlay`.
+      Best-of-3 rounds, a simultaneous KO draws the round, rematch via the on-screen button or a
+      punch/kick/lunge from either player once `matchOver` settles.) Along the way, found and
+      fixed a real physics bug this depended on: platforms were sucking in any point below them
+      from any distance rather than only a genuine crossing, flinging every ragdoll into orbit
+      within a couple of frames — see `docs/ARCHITECTURE.md`'s `resolveSegmentCollision` gotcha.
 - [ ] Design polish: tune impulse magnitudes in `duel/impulse.ts` against the settled-heap look
       from Epic 1 so a punch/kick/lunge reads as a clear, deliberate hit rather than a twitch —
-      needs playtesting once win conditions make a "hit" mean something.
+      win conditions now make a "hit" mean something (this run's KO detection), so this is
+      playtestable; the current pin threshold (`PIN_THRESHOLD_SECONDS` in `round.ts`) and KO
+      geometry (`koDetection.ts`) may also need retuning once impulses change.
 
 ## Epic 4 — Juice & ship
 
