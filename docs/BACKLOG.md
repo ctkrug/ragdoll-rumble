@@ -7,14 +7,20 @@ should still be small enough to land as a focused set of commits in one build se
 
 Turn the generic physics core (`src/physics/`) into an actual humanoid.
 
-- [ ] Define a ragdoll skeleton: head, torso, upper/lower arms, upper/lower legs as points
+- [x] Define a ragdoll skeleton: head, torso, upper/lower arms, upper/lower legs as points
       connected by distance constraints, built on top of the existing `VerletPoint` /
-      `DistanceConstraint` primitives.
-- [ ] Add angle constraints for joint limits so elbows and knees don't hyperextend or bend
-      backward.
-- [ ] Add capsule/circle collision shapes per limb segment for arena and opponent collision.
+      `DistanceConstraint` primitives. (`src/ragdoll/skeleton.ts`)
+- [x] Add angle constraints for joint limits so elbows and knees don't hyperextend or bend
+      backward. (`src/physics/angleConstraint.ts`, wired into `solver.step`)
+- [x] Add capsule/circle collision shapes per limb segment for opponent collision.
+      (`src/physics/capsule.ts`, used by `duel/scene.ts` for ragdoll-vs-ragdoll). Arena-geometry
+      collision (vs. platforms) is Epic 2's job, not done yet.
 - [ ] Design polish: tune stiffness, damping, and constraint iteration count until the rig
-      reads as floppy-but-controllable rather than either rigid or spaghetti.
+      reads as floppy-but-controllable rather than either rigid or spaghetti. Fixed a real
+      instability this run (angle-constraint corrections were injecting momentum and flinging
+      the rig off-screen — see `docs/ARCHITECTURE.md`), but there's no active balance yet, so a
+      standing ragdoll just collapses into a heap; "controllable" needs Epic 3's player impulses
+      to evaluate meaningfully.
 
 ## Epic 2 — Arena & collision
 
