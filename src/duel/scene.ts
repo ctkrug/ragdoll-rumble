@@ -8,6 +8,8 @@ export interface DuelScene {
   arena: Arena;
   ragdollA: Ragdoll;
   ragdollB: Ragdoll;
+  /** Whether any limb of ragdollA overlapped a limb of ragdollB during the most recent stepDuel call. */
+  contactThisStep: boolean;
 }
 
 /** A standing ragdoll's total height, head-top to foot, at scale 1. */
@@ -48,21 +50,32 @@ export function createDuelScene(
     gravity: { x: 0, y: 1400 },
     damping: 0.985,
     geometry: arena.geometry,
-    onIteration: () => resolveRagdollCollisions(ragdollA, ragdollB),
   };
 
-  return { world, arena, ragdollA, ragdollB };
+  const scene: DuelScene = { world, arena, ragdollA, ragdollB, contactThisStep: false };
+  world.onIteration = () => {
+    if (resolveRagdollCollisions(ragdollA, ragdollB)) scene.contactThisStep = true;
+  };
+
+  return scene;
 }
 
-/** Pushes every limb of ragdoll A apart from every overlapping limb of ragdoll B. */
-export function resolveRagdollCollisions(a: Ragdoll, b: Ragdoll): void {
+/**
+ * Pushes every limb of ragdoll A apart from every overlapping limb of
+ * ragdoll B. Returns whether any pair actually overlapped.
+ */
+export function resolveRagdollCollisions(a: Ragdoll, b: Ragdoll): boolean {
+  let contact = false;
   for (const limbA of a.limbs) {
     for (const limbB of b.limbs) {
-      resolveCapsuleCollision(limbA, limbB);
+      if (resolveCapsuleCollision(limbA, limbB)) contact = true;
     }
   }
+  return contact;
 }
 
+/** Steps the physics world one fixed tick, resetting/recomputing contactThisStep as it goes. */
 export function stepDuel(scene: DuelScene, dt: number): void {
+  scene.contactThisStep = false;
   step(scene.world, dt);
 }

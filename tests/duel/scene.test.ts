@@ -38,15 +38,23 @@ describe("createDuelScene", () => {
 });
 
 describe("resolveRagdollCollisions", () => {
-  it("separates two overlapping torsos", () => {
+  it("separates two overlapping torsos and reports contact", () => {
     const a = createRagdoll(0, 0);
     const b = createRagdoll(5, 0);
     const before = length(sub(b.points.neck.pos, a.points.neck.pos));
 
-    resolveRagdollCollisions(a, b);
+    const contact = resolveRagdollCollisions(a, b);
 
     const after = length(sub(b.points.neck.pos, a.points.neck.pos));
     expect(after).toBeGreaterThan(before);
+    expect(contact).toBe(true);
+  });
+
+  it("reports no contact when ragdolls are far apart", () => {
+    const a = createRagdoll(0, 0);
+    const b = createRagdoll(10000, 0);
+
+    expect(resolveRagdollCollisions(a, b)).toBe(false);
   });
 });
 
@@ -62,5 +70,28 @@ describe("stepDuel", () => {
       expect(Number.isFinite(point.pos.x)).toBe(true);
       expect(Number.isFinite(point.pos.y)).toBe(true);
     }
+  });
+
+  it("sets contactThisStep once two ragdolls overlap, and clears it once they're apart again", () => {
+    const scene = createDuelScene(1440, 900, 2);
+    // The two ragdolls spawn apart; pull ragdollB most of the way onto
+    // ragdollA (but not exactly coincident — resolveCapsuleCollision treats
+    // zero distance as degenerate) to force limb overlap.
+    const offset = sub(scene.ragdollA.points.pelvis.pos, scene.ragdollB.points.pelvis.pos);
+    for (const point of Object.values(scene.ragdollB.points)) {
+      point.pos.x += offset.x - 1;
+      point.pos.y += offset.y;
+      // Keep prevPos in lockstep so the teleport doesn't read as an implicit
+      // velocity kick that integratePoint would fling right back out with.
+      point.prevPos.x += offset.x - 1;
+      point.prevPos.y += offset.y;
+    }
+
+    stepDuel(scene, 1 / 60);
+    expect(scene.contactThisStep).toBe(true);
+
+    const farScene = createDuelScene(1440, 900, 2);
+    stepDuel(farScene, 1 / 60);
+    expect(farScene.contactThisStep).toBe(false);
   });
 });
