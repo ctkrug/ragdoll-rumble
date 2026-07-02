@@ -1,3 +1,17 @@
+:root {
+  --bg: #0b0d17;
+  --surface-1: #161a2b;
+  --surface-2: #1f2540;
+  --text: #f4f6ff;
+  --text-muted: #8b93b8;
+  --accent: #ff2e6d;
+  --accent-support: #29e0ff;
+  --success: #4dff88;
+  --danger: #ff4d4d;
+  --font-display: "Press Start 2P", "Courier New", monospace;
+  --font-ui: "Space Mono", ui-monospace, "SF Mono", monospace;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -6,17 +20,33 @@ html,
 body {
   margin: 0;
   height: 100%;
-  background: #101014;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-ui);
 }
 
 #app {
+  position: relative;
   display: flex;
   width: 100%;
   height: 100vh;
+  overflow: hidden;
 }
 
 #stage {
   width: 100%;
   height: 100%;
   display: block;
+}
+
+/* CRT scanline + vignette treatment per docs/DESIGN.md: a fixed overlay
+   rather than baking it into every render call. Static, so it needs no
+   prefers-reduced-motion handling. */
+#crt-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(rgba(0, 0, 0, 0.04) 0 1px, rgba(0, 0, 0, 0) 1px 2px),
+    radial-gradient(ellipse at center, rgba(0, 0, 0, 0) 55%, rgba(0, 0, 0, 0.55) 100%);
 }
