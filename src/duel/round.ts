@@ -20,6 +20,8 @@ export interface MatchState {
   pinTimerB: number;
   roundWinner: Player | null;
   matchWinner: Player | null;
+  /** How many swings have landed a genuine hit this match; a fun stat for the win overlay. */
+  totalHitsLanded: number;
 }
 
 export const COUNTDOWN_SECONDS = 3;
@@ -40,7 +42,13 @@ export function createMatchState(): MatchState {
     pinTimerB: 0,
     roundWinner: null,
     matchWinner: null,
+    totalHitsLanded: 0,
   };
+}
+
+/** Records a genuine landed hit (main.ts calls this alongside its shake/flash/SFX trigger). */
+export function recordLandedHit(state: MatchState): void {
+  state.totalHitsLanded++;
 }
 
 /**

@@ -4,6 +4,7 @@ import {
   COUNTDOWN_SECONDS,
   createMatchState,
   PIN_THRESHOLD_SECONDS,
+  recordLandedHit,
   ROUND_OVER_SECONDS,
   ROUNDS_TO_WIN,
   type KoStatus,
@@ -30,7 +31,20 @@ describe("createMatchState", () => {
       pinTimerB: 0,
       roundWinner: null,
       matchWinner: null,
+      totalHitsLanded: 0,
     });
+  });
+});
+
+describe("recordLandedHit", () => {
+  it("increments totalHitsLanded and leaves the rest of the state untouched", () => {
+    const state = createMatchState();
+
+    recordLandedHit(state);
+    recordLandedHit(state);
+
+    expect(state.totalHitsLanded).toBe(2);
+    expect(state.phase).toBe("countdown");
   });
 });
 
