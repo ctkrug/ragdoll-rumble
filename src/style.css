@@ -50,3 +50,78 @@ body {
     repeating-linear-gradient(rgba(0, 0, 0, 0.04) 0 1px, rgba(0, 0, 0, 0) 1px 2px),
     radial-gradient(ellipse at center, rgba(0, 0, 0, 0) 55%, rgba(0, 0, 0, 0.55) 100%);
 }
+
+/* Touch action buttons: hidden on desktop (keyboard is the primary input
+   there), shown as a fixed footer strip on phone-width viewports per
+   docs/DESIGN.md's phone layout. */
+#touch-controls {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  #touch-controls {
+    position: absolute;
+    inset: auto 0 0 0;
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 16px;
+    pointer-events: none;
+  }
+
+  .touch-group {
+    display: flex;
+    gap: 8px;
+    pointer-events: auto;
+  }
+}
+
+.touch-btn {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 2px solid var(--accent);
+  border-radius: 2px;
+  background: var(--surface-1);
+  color: var(--text);
+  font-family: var(--font-ui);
+  font-size: 12px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition:
+    transform 120ms ease-out,
+    background-color 120ms ease-out,
+    box-shadow 120ms ease-out;
+}
+
+.touch-btn--p2 {
+  border-color: var(--accent-support);
+}
+
+.touch-btn:hover {
+  background: var(--surface-2);
+}
+
+.touch-btn:active {
+  transform: scale(0.94);
+  background: var(--accent);
+  color: var(--bg);
+}
+
+.touch-btn--p2:active {
+  background: var(--accent-support);
+}
+
+.touch-btn:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 2px var(--bg),
+    0 0 12px var(--accent);
+}
+
+.touch-btn--p2:focus-visible {
+  box-shadow:
+    0 0 0 2px var(--bg),
+    0 0 12px var(--accent-support);
+}
