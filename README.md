@@ -43,7 +43,11 @@ rather than broken. The physics _is_ the game.
 
 ## Status
 
-Early scaffold. See [`docs/VISION.md`](docs/VISION.md) for the full design rationale and
+The physics core (Verlet points, distance constraints, angle/joint-limit constraints, capsule
+collision) is built and tested, and two fully-rigged humanoid ragdolls duel in a shared arena
+with ragdoll-vs-ragdoll collision. No player input yet — the next milestone is impulse-driven
+controls. See [`docs/VISION.md`](docs/VISION.md) for the full design rationale,
+[`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for a map of the code, and
 [`docs/BACKLOG.md`](docs/BACKLOG.md) for the build plan.
 
 ## Developing
