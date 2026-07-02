@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { COUNTDOWN_SECONDS, createMatchState } from "../../src/duel/round";
-import { formatScore, matchOverTitle, phaseMessage } from "../../src/ui/hud";
+import { formatScore, matchOverTitle, matchStatsText, phaseMessage } from "../../src/ui/hud";
 
 describe("formatScore", () => {
   it("renders 0 wins as all empty pips", () => {
@@ -63,5 +63,27 @@ describe("matchOverTitle", () => {
   it("is blank with no winner yet", () => {
     const state = createMatchState();
     expect(matchOverTitle(state)).toBe("");
+  });
+});
+
+describe("matchStatsText", () => {
+  it("pluralizes rounds and hits", () => {
+    const state = createMatchState();
+    state.round = 3;
+    state.totalHitsLanded = 5;
+    expect(matchStatsText(state)).toBe("3 ROUNDS · 5 HITS LANDED");
+  });
+
+  it("keeps rounds and hit singular at one", () => {
+    const state = createMatchState();
+    state.round = 1;
+    state.totalHitsLanded = 1;
+    expect(matchStatsText(state)).toBe("1 ROUND · 1 HIT LANDED");
+  });
+
+  it("handles zero hits landed", () => {
+    const state = createMatchState();
+    state.totalHitsLanded = 0;
+    expect(matchStatsText(state)).toBe("1 ROUND · 0 HITS LANDED");
   });
 });
