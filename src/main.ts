@@ -4,6 +4,7 @@ import { createDuelScene, stepDuel } from "./duel/scene";
 import { applyPlayerActions, PLAYER_ONE_CONTROLS, PLAYER_TWO_CONTROLS } from "./duel/controls";
 import { createKeyboardInput } from "./input/keyboard";
 import { renderDuelScene } from "./render/duel";
+import { wireTouchControls } from "./ui/touchControls";
 
 const canvas = document.querySelector<HTMLCanvasElement>("#stage");
 if (!canvas) throw new Error("#stage canvas not found");
@@ -11,6 +12,7 @@ if (!canvas) throw new Error("#stage canvas not found");
 const stage = createStage(canvas);
 let scene = createDuelScene(stage.width, stage.height);
 const keyboard = createKeyboardInput(window);
+wireTouchControls(document, () => scene);
 
 // createStage already resizes the canvas backing store on window resize;
 // rebuild the scene afterward so ragdoll scale tracks the new arena size.
