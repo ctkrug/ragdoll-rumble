@@ -1,0 +1,311 @@
+/* Landing page for Ragdoll Rumble. Deliberately standalone (plain HTML/CSS, no build step,
+   no import from ../src) so it keeps working regardless of how the app itself is bundled —
+   these tokens intentionally mirror docs/DESIGN.md and ../src/style.css; keep them in sync by
+   hand if either changes. */
+
+:root {
+  --bg: #0b0d17;
+  --surface-1: #161a2b;
+  --surface-2: #1f2540;
+  --text: #f4f6ff;
+  --text-muted: #8b93b8;
+  --accent: #ff2e6d;
+  --accent-support: #29e0ff;
+  --font-display: "Press Start 2P", "Courier New", monospace;
+  --font-ui: "Space Mono", ui-monospace, "SF Mono", monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-ui);
+}
+
+body {
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Same fixed CRT scanline + vignette treatment as the app, so the landing page and the game
+   read as one brand from the first scroll. */
+.crt-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  background:
+    repeating-linear-gradient(rgba(0, 0, 0, 0.04) 0 1px, rgba(0, 0, 0, 0) 1px 2px),
+    radial-gradient(ellipse at center, rgba(0, 0, 0, 0) 55%, rgba(0, 0, 0, 0.6) 100%);
+}
+
+.hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  max-width: 62ch;
+  margin: 0 auto;
+  padding: 96px 24px 48px;
+  text-align: center;
+}
+
+.hero-eyebrow {
+  margin: 0;
+  font-size: 12px;
+  letter-spacing: 0.15em;
+  color: var(--accent-support);
+  text-shadow: 0 0 8px var(--accent-support);
+}
+
+/* Signature detail per docs/DESIGN.md: an animated wordmark — a slow neon flicker, the one
+   flourish this page leads with. */
+.wordmark {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(30px, 8vw, 48px);
+  line-height: 1.4;
+  color: var(--text);
+  text-shadow:
+    0 0 12px var(--accent),
+    0 0 28px var(--accent);
+  animation: wordmark-flicker 4s ease-in-out infinite;
+}
+
+@keyframes wordmark-flicker {
+  0%,
+  92%,
+  100% {
+    text-shadow:
+      0 0 12px var(--accent),
+      0 0 28px var(--accent);
+  }
+  94% {
+    text-shadow: 0 0 4px var(--accent);
+  }
+  96% {
+    text-shadow:
+      0 0 16px var(--accent),
+      0 0 36px var(--accent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wordmark {
+    animation: none;
+  }
+}
+
+.hero-tagline {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--text-muted);
+}
+
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 8px;
+}
+
+.btn {
+  min-height: 44px;
+  padding: 12px 28px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 2px;
+  font-family: var(--font-ui);
+  font-size: 15px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition:
+    transform 150ms ease-out,
+    background-color 150ms ease-out,
+    box-shadow 150ms ease-out,
+    color 150ms ease-out;
+}
+
+.btn--primary {
+  border: 2px solid var(--accent);
+  background: var(--accent);
+  color: var(--bg);
+}
+
+.btn--primary:hover {
+  background: var(--bg);
+  color: var(--accent);
+  box-shadow: 0 0 16px var(--accent);
+}
+
+.btn--secondary {
+  border: 2px solid var(--text-muted);
+  background: transparent;
+  color: var(--text-muted);
+}
+
+.btn--secondary:hover {
+  color: var(--text);
+  border-color: var(--accent-support);
+  box-shadow: 0 0 12px var(--accent-support);
+}
+
+.btn:active {
+  transform: scale(0.96);
+}
+
+.btn:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 2px var(--bg),
+    0 0 12px var(--accent-support);
+}
+
+.preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 0 24px 64px;
+}
+
+.preview-frame {
+  width: min(100%, 960px);
+  aspect-ratio: 16 / 10;
+  border: 2px solid var(--accent-support);
+  border-radius: 2px;
+  box-shadow: 0 0 24px rgba(41, 224, 255, 0.35);
+  overflow: hidden;
+  background: var(--bg);
+}
+
+.preview-frame iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+.preview-hint {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.section-title {
+  margin: 0 0 24px;
+  font-family: var(--font-display);
+  font-size: 19px;
+  color: var(--text);
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.features {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 48px 24px;
+}
+
+.feature-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 24px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.feature-list li {
+  padding: 20px;
+  background: var(--surface-1);
+  border: 2px solid var(--surface-2);
+  border-radius: 2px;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+.feature-tag {
+  display: block;
+  margin-bottom: 8px;
+  font-family: var(--font-display);
+  font-size: 12px;
+  color: var(--accent-support);
+}
+
+.controls {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 16px 24px 64px;
+  text-align: center;
+}
+
+.controls-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 24px;
+}
+
+.controls-grid table {
+  border-collapse: collapse;
+  min-width: 180px;
+  background: var(--surface-1);
+  border: 2px solid var(--accent);
+}
+
+.controls-grid table:last-child {
+  border-color: var(--accent-support);
+}
+
+.controls-grid caption {
+  padding: 8px;
+  font-family: var(--font-display);
+  font-size: 12px;
+  color: var(--text);
+  background: var(--surface-2);
+  text-transform: uppercase;
+}
+
+.controls-grid th,
+.controls-grid td {
+  padding: 8px 16px;
+  border-top: 1px solid var(--surface-2);
+  font-size: 14px;
+  text-align: left;
+}
+
+.controls-grid th {
+  color: var(--text-muted);
+  font-weight: normal;
+}
+
+.controls-hint {
+  margin: 20px 0 0;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.site-footer {
+  padding: 32px 24px 48px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.site-footer a {
+  color: var(--accent-support);
+}
+
+@media (max-width: 480px) {
+  .hero {
+    padding-top: 64px;
+  }
+}

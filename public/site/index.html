@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ragdoll Rumble — a physics duel built from scratch</title>
+    <meta
+      name="description"
+      content="Two ragdolls duel with wild, floppy momentum in procedurally varied arenas — powered by a constraint-based physics engine built entirely from scratch, no physics library."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Space+Mono:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <div class="crt-overlay" aria-hidden="true"></div>
+
+    <header class="hero">
+      <p class="hero-eyebrow">A PHYSICS DUEL BUILT FROM SCRATCH</p>
+      <h1 class="wordmark">RAGDOLL<br />RUMBLE</h1>
+      <p class="hero-tagline">
+        Two ragdolls swing at each other with wild, floppy momentum in procedurally varied arenas.
+        No physics engine is imported — the constraint solver that keeps every limb attached is
+        built from scratch in TypeScript.
+      </p>
+      <div class="hero-actions">
+        <a class="btn btn--primary" href="../index.html">Play Now</a>
+        <a class="btn btn--secondary" href="https://github.com/ctkrug/ragdoll-rumble">
+          View Source
+        </a>
+      </div>
+    </header>
+
+    <section class="preview">
+      <div class="preview-frame">
+        <iframe src="../index.html" title="Ragdoll Rumble — live preview" loading="lazy"></iframe>
+      </div>
+      <p class="preview-hint">Live preview — hit Play Now for the full-screen arena.</p>
+    </section>
+
+    <section class="features" aria-labelledby="features-title">
+      <h2 id="features-title" class="section-title">What it is</h2>
+      <ol class="feature-list">
+        <li>
+          <span class="feature-tag">01</span>
+          A from-scratch Verlet-integration constraint solver — no Box2D, no Matter.js, no physics
+          library at all.
+        </li>
+        <li>
+          <span class="feature-tag">02</span>
+          Local two-player duels: keyboard (split control scheme) or on-screen touch controls throw
+          punches, kicks, and lunges.
+        </li>
+        <li>
+          <span class="feature-tag">03</span>
+          Procedurally varied arenas — tilted floors and floating platforms, driven by a seed so a
+          rematch never plays out the same way twice.
+        </li>
+        <li>
+          <span class="feature-tag">04</span>
+          A full juice pass: screen shake, an impact flash at the point of contact, hitstop,
+          synthesized WebAudio SFX, and a win-celebration overlay with a K.O. stamp.
+        </li>
+      </ol>
+    </section>
+
+    <section class="controls" aria-labelledby="controls-title">
+      <h2 id="controls-title" class="section-title">Controls</h2>
+      <div class="controls-grid">
+        <table>
+          <caption>
+            Player 1
+          </caption>
+          <tbody>
+            <tr>
+              <th scope="row">Punch</th>
+              <td>F</td>
+            </tr>
+            <tr>
+              <th scope="row">Kick</th>
+              <td>G</td>
+            </tr>
+            <tr>
+              <th scope="row">Lunge</th>
+              <td>H</td>
+            </tr>
+          </tbody>
+        </table>
+        <table>
+          <caption>
+            Player 2
+          </caption>
+          <tbody>
+            <tr>
+              <th scope="row">Punch</th>
+              <td>/</td>
+            </tr>
+            <tr>
+              <th scope="row">Kick</th>
+              <td>.</td>
+            </tr>
+            <tr>
+              <th scope="row">Lunge</th>
+              <td>,</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="controls-hint">On a phone-width screen, on-screen touch buttons take over.</p>
+    </section>
+
+    <footer class="site-footer">
+      <p>
+        Built by Charlie Krug ·
+        <a href="https://github.com/ctkrug/ragdoll-rumble">Source on GitHub</a>
+      </p>
+    </footer>
+  </body>
+</html>
