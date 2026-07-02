@@ -144,7 +144,16 @@ function tick(now: number): void {
       resolveActions(keyboard, PLAYER_TWO_CONTROLS);
     }
 
-    stepDuel(scene, FIXED_DT);
+    // Hold physics still through the countdown: with no active balancing,
+    // gravity alone collapses a standing ragdoll within a couple of seconds
+    // (see docs/BACKLOG.md's Epic 1 note), and stepping the world for the
+    // full 3s countdown let both ragdolls hit the floor — and sometimes the
+    // pin-KO threshold — before "FIGHT!" ever unlocked input. Freezing the
+    // spawn pose here means the round's outcome depends on what the players
+    // do once they can actually act.
+    if (match.phase !== "countdown") {
+      stepDuel(scene, FIXED_DT);
+    }
     updateShake(shake, FIXED_DT);
     updateFlash(flash, FIXED_DT);
 
