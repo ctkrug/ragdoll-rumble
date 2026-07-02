@@ -4,6 +4,8 @@ import type { DistanceConstraint } from "./constraint";
 import { satisfyDistanceConstraint } from "./constraint";
 import type { AngleConstraint } from "./angleConstraint";
 import { satisfyAngleConstraint } from "./angleConstraint";
+import type { Segment } from "./segment";
+import { resolveSegmentCollision } from "./segment";
 import type { Vec2 } from "./vec2";
 
 export interface World {
@@ -12,8 +14,8 @@ export interface World {
   angleConstraints?: AngleConstraint[];
   gravity: Vec2;
   damping: number;
-  /** Ground line; points are clamped above it. */
-  floorY: number;
+  /** Floor/platform surfaces; points are clamped above whichever they penetrate. */
+  geometry: Segment[];
   /**
    * Optional extra constraint (e.g. ragdoll-vs-ragdoll capsule collision) run
    * every iteration alongside bone/joint relaxation. Resolving it only once
@@ -47,16 +49,14 @@ export function step(world: World, dt: number): void {
       }
     }
     world.onIteration?.();
-    applyFloorCollision(world);
+    applyGeometryCollision(world);
   }
 }
 
-function applyFloorCollision(world: World): void {
+function applyGeometryCollision(world: World): void {
   for (const point of world.points) {
-    if (point.pinned) continue;
-    if (point.pos.y > world.floorY) {
-      point.pos.y = world.floorY;
-      point.prevPos.x += (point.pos.x - point.prevPos.x) * FLOOR_FRICTION;
+    for (const segment of world.geometry) {
+      resolveSegmentCollision(point, segment, FLOOR_FRICTION);
     }
   }
 }

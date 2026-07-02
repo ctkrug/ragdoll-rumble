@@ -24,7 +24,7 @@ describe("ragdoll settling under gravity", () => {
       angleConstraints: ragdoll.joints,
       gravity: { x: 0, y: 900 },
       damping: 0.98,
-      floorY: 500,
+      geometry: [{ a: { x: -1000, y: 500 }, b: { x: 1000, y: 500 } }],
     };
 
     for (let i = 0; i < 300; i++) {
@@ -46,7 +46,7 @@ describe("ragdoll settling under gravity", () => {
       angleConstraints: ragdoll.joints,
       gravity: { x: 0, y: 900 },
       damping: 0.98,
-      floorY: 500,
+      geometry: [{ a: { x: -1000, y: 500 }, b: { x: 1000, y: 500 } }],
     };
 
     for (let i = 0; i < 300; i++) {

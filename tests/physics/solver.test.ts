@@ -13,7 +13,7 @@ describe("step", () => {
       constraints: [],
       gravity: { x: 0, y: 500 },
       damping: 1,
-      floorY: 10,
+      geometry: [{ a: { x: -1000, y: 10 }, b: { x: 1000, y: 10 } }],
     };
 
     for (let i = 0; i < 20; i++) {
@@ -32,7 +32,7 @@ describe("step", () => {
       constraints: [constraint],
       gravity: { x: 0, y: 500 },
       damping: 0.98,
-      floorY: 1000,
+      geometry: [{ a: { x: -1000, y: 1000 }, b: { x: 1000, y: 1000 } }],
     };
 
     for (let i = 0; i < 120; i++) {
@@ -61,7 +61,7 @@ describe("step", () => {
       angleConstraints: [angleConstraint],
       gravity: { x: 0, y: 500 },
       damping: 0.98,
-      floorY: 1000,
+      geometry: [{ a: { x: -1000, y: 1000 }, b: { x: 1000, y: 1000 } }],
     };
 
     for (let i = 0; i < 120; i++) {

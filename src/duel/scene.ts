@@ -37,7 +37,7 @@ export function createDuelScene(width: number, height: number): DuelScene {
     angleConstraints: [...ragdollA.joints, ...ragdollB.joints],
     gravity: { x: 0, y: 1400 },
     damping: 0.985,
-    floorY,
+    geometry: [{ a: { x: 0, y: floorY }, b: { x: width, y: floorY } }],
     onIteration: () => resolveRagdollCollisions(ragdollA, ragdollB),
   };
 

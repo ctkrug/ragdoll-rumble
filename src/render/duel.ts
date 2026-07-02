@@ -20,10 +20,12 @@ export function renderDuelScene(stage: Stage, scene: DuelScene): void {
   ctx.shadowColor = FLOOR_GLOW;
   ctx.shadowBlur = 12;
   ctx.lineWidth = 3;
-  ctx.beginPath();
-  ctx.moveTo(0, scene.world.floorY);
-  ctx.lineTo(stage.width, scene.world.floorY);
-  ctx.stroke();
+  for (const segment of scene.world.geometry) {
+    ctx.beginPath();
+    ctx.moveTo(segment.a.x, segment.a.y);
+    ctx.lineTo(segment.b.x, segment.b.y);
+    ctx.stroke();
+  }
   ctx.restore();
 
   renderRagdoll(ctx, scene.ragdollA, PLAYER_ONE_THEME);
