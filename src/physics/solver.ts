@@ -14,9 +14,19 @@ export interface World {
   damping: number;
   /** Ground line; points are clamped above it. */
   floorY: number;
+  /**
+   * Optional extra constraint (e.g. ragdoll-vs-ragdoll capsule collision) run
+   * every iteration alongside bone/joint relaxation. Resolving it only once
+   * per frame, after bones have already settled, makes it fight the bone
+   * constraints across frames and pump energy into the system instead of
+   * converging — folding it into the same iterative loop keeps it stable.
+   */
+  onIteration?: () => void;
 }
 
-const CONSTRAINT_ITERATIONS = 8;
+const CONSTRAINT_ITERATIONS = 12;
+/** Bleeds horizontal velocity for points resting on the floor so a settled ragdoll stops. */
+const FLOOR_FRICTION = 0.2;
 
 /**
  * One fixed-timestep world step: integrate every point, then relax every
@@ -36,6 +46,7 @@ export function step(world: World, dt: number): void {
         satisfyAngleConstraint(angleConstraint);
       }
     }
+    world.onIteration?.();
     applyFloorCollision(world);
   }
 }
@@ -45,6 +56,7 @@ function applyFloorCollision(world: World): void {
     if (point.pinned) continue;
     if (point.pos.y > world.floorY) {
       point.pos.y = world.floorY;
+      point.prevPos.x += (point.pos.x - point.prevPos.x) * FLOOR_FRICTION;
     }
   }
 }
