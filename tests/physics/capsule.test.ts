@@ -66,6 +66,19 @@ describe("resolveCapsuleCollision", () => {
     expect(collided).toBe(false);
   });
 
+  it("reports no contact for capsules exactly touching at their combined radius", () => {
+    const p1 = createPoint({ x: 0, y: 0 });
+    const p2 = createPoint({ x: 10, y: 0 });
+    const circleA = createCapsule(p1, p1, 5);
+    const circleB = createCapsule(p2, p2, 5);
+
+    const collided = resolveCapsuleCollision(circleA, circleB);
+
+    expect(collided).toBe(false);
+    expect(p1.pos).toEqual({ x: 0, y: 0 });
+    expect(p2.pos).toEqual({ x: 10, y: 0 });
+  });
+
   it("resolves overlapping circles (degenerate capsules) symmetrically", () => {
     const p1 = createPoint({ x: 0, y: 0 });
     const p2 = createPoint({ x: 4, y: 0 });
