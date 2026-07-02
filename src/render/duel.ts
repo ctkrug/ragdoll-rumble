@@ -3,6 +3,7 @@ import type { Arena } from "../arena/generator";
 import type { DuelScene } from "../duel/scene";
 import type { Vec2 } from "../physics/vec2";
 import { renderRagdoll } from "./ragdoll";
+import { flashVisual, type ImpactFlashState } from "./impactFlash";
 
 const BG = "#0b0d17";
 const FLOOR_COLOR = "#2a3155";
@@ -26,6 +27,7 @@ export function renderDuelScene(
   stage: Stage,
   scene: DuelScene,
   shakeOffset: Vec2 = { x: 0, y: 0 },
+  flash: ImpactFlashState | null = null,
 ): void {
   const { ctx } = stage;
 
@@ -40,6 +42,31 @@ export function renderDuelScene(
   renderRagdoll(ctx, scene.ragdollA, PLAYER_ONE_THEME);
   renderRagdoll(ctx, scene.ragdollB, PLAYER_TWO_THEME);
 
+  if (flash) renderImpactFlash(ctx, flash);
+
+  ctx.restore();
+}
+
+/** A quick radial white burst at the point of contact — see render/impactFlash.ts. */
+function renderImpactFlash(ctx: CanvasRenderingContext2D, flash: ImpactFlashState): void {
+  const { opacity, radius } = flashVisual(flash);
+  if (opacity <= 0 || radius <= 0) return;
+
+  ctx.save();
+  const gradient = ctx.createRadialGradient(
+    flash.position.x,
+    flash.position.y,
+    0,
+    flash.position.x,
+    flash.position.y,
+    radius,
+  );
+  gradient.addColorStop(0, `rgba(244, 246, 255, ${opacity})`);
+  gradient.addColorStop(1, "rgba(244, 246, 255, 0)");
+  ctx.fillStyle = gradient;
+  ctx.beginPath();
+  ctx.arc(flash.position.x, flash.position.y, radius, 0, Math.PI * 2);
+  ctx.fill();
   ctx.restore();
 }
 
