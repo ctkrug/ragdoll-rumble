@@ -39,6 +39,11 @@ export interface Ragdoll {
 /** Elbows and knees fold to ~20 degrees but never hyperextend past straight. */
 const JOINT_MIN_ANGLE = 0.35;
 const JOINT_MAX_ANGLE = Math.PI;
+// A joint-limit snap moves the hand/foot without touching prevPos, so a hard
+// snap reads as a burst of Verlet velocity; softening it lets the solver's
+// iterations converge gradually instead of injecting energy every frame (see
+// AngleConstraint.stiffness).
+const JOINT_STIFFNESS = 0.3;
 
 const HEAD_RADIUS = 14;
 const TORSO_RADIUS = 12;
@@ -108,6 +113,7 @@ export function createRagdoll(originX: number, originY: number, scale = 1): Ragd
       points.leftHand,
       JOINT_MIN_ANGLE,
       JOINT_MAX_ANGLE,
+      JOINT_STIFFNESS,
     ),
     createAngleConstraint(
       points.rightShoulder,
@@ -115,6 +121,7 @@ export function createRagdoll(originX: number, originY: number, scale = 1): Ragd
       points.rightHand,
       JOINT_MIN_ANGLE,
       JOINT_MAX_ANGLE,
+      JOINT_STIFFNESS,
     ),
     createAngleConstraint(
       points.leftHip,
@@ -122,6 +129,7 @@ export function createRagdoll(originX: number, originY: number, scale = 1): Ragd
       points.leftFoot,
       JOINT_MIN_ANGLE,
       JOINT_MAX_ANGLE,
+      JOINT_STIFFNESS,
     ),
     createAngleConstraint(
       points.rightHip,
@@ -129,6 +137,7 @@ export function createRagdoll(originX: number, originY: number, scale = 1): Ragd
       points.rightFoot,
       JOINT_MIN_ANGLE,
       JOINT_MAX_ANGLE,
+      JOINT_STIFFNESS,
     ),
   ];
 
