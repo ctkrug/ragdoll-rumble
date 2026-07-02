@@ -87,4 +87,27 @@ describe("applyPlayerActions", () => {
 
     expect(ragdoll.points).toEqual(before);
   });
+
+  it("returns the actions it applied", () => {
+    const ragdoll = createRagdoll(0, 0);
+    const opponent = createRagdoll(100, 0);
+
+    const applied = applyPlayerActions(
+      ragdoll,
+      opponent,
+      fakeInput([PLAYER_ONE_CONTROLS.kick]),
+      PLAYER_ONE_CONTROLS,
+    );
+
+    expect(applied).toEqual(["kick"]);
+  });
+
+  it("returns an empty array when nothing fired", () => {
+    const ragdoll = createRagdoll(0, 0);
+    const opponent = createRagdoll(100, 0);
+
+    const applied = applyPlayerActions(ragdoll, opponent, fakeInput([]), PLAYER_ONE_CONTROLS);
+
+    expect(applied).toEqual([]);
+  });
 });
