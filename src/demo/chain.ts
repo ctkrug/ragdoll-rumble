@@ -7,7 +7,12 @@ import type { World } from "../physics/solver";
  * integrator, constraints, and solver loop actually hold a chain together
  * under gravity ahead of the full ragdoll rig landing in later build runs.
  */
-export function createChainWorld(originX: number, originY: number, links: number, spacing: number): World {
+export function createChainWorld(
+  originX: number,
+  originY: number,
+  links: number,
+  spacing: number,
+): World {
   const points = [];
   for (let i = 0; i < links; i++) {
     points.push(createPoint({ x: originX, y: originY + i * spacing }, i === 0));

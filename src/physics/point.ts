@@ -15,7 +15,12 @@ export function createPoint(pos: Vec2, pinned = false): VerletPoint {
  * so damping and impulses can be applied by nudging pos directly with no separate
  * velocity field to keep in sync.
  */
-export function integratePoint(point: VerletPoint, gravity: Vec2, damping: number, dt: number): void {
+export function integratePoint(
+  point: VerletPoint,
+  gravity: Vec2,
+  damping: number,
+  dt: number,
+): void {
   if (point.pinned) return;
 
   const velocity = scale(sub(point.pos, point.prevPos), damping);

@@ -10,7 +10,7 @@ Ragdoll physics is usually "install Box2D/Matter.js and drag some joints around.
 solved problem if you're willing to depend on someone else's solver. Ragdoll Rumble solves it
 itself: a Verlet-integration particle system plus iterative distance/angle constraints, tuned
 until two skeletons can stagger, flail, and knock each other over in a way that reads as funny
-rather than broken. The physics *is* the game.
+rather than broken. The physics _is_ the game.
 
 ## What it is
 
