@@ -1,4 +1,13 @@
 import "./style.css";
+import {
+  createSfxEngine,
+  ensureAudioContext,
+  isMuted,
+  playImpact,
+  playKnockout,
+  playUiClick,
+  toggleMute,
+} from "./audio/sfx";
 import { createStage } from "./render/canvas";
 import { createDuelScene, stepDuel } from "./duel/scene";
 import {
@@ -12,7 +21,7 @@ import { advanceMatch, createMatchState, MATCH_OVER_INPUT_DELAY_SECONDS } from "
 import { createKeyboardInput } from "./input/keyboard";
 import { renderDuelScene } from "./render/duel";
 import { createShakeState, shakeOffset, triggerShake, updateShake } from "./render/screenShake";
-import { queryHudElements, renderHud } from "./ui/hud";
+import { queryHudElements, renderHud, renderMuteToggle } from "./ui/hud";
 import { wireTouchControls } from "./ui/touchControls";
 
 const canvas = document.querySelector<HTMLCanvasElement>("#stage");
@@ -23,14 +32,27 @@ let scene = createDuelScene(stage.width, stage.height);
 let match = createMatchState();
 const keyboard = createKeyboardInput(window);
 const shake = createShakeState();
+const sfx = createSfxEngine();
 const reducedMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+// The AudioContext must be created from a real user gesture (autoplay
+// policy); either of the first keydown or pointerdown anywhere does. Both
+// listeners are one-shot, and ensureAudioContext is itself idempotent, so
+// whichever fires first is the only one that does anything.
+window.addEventListener("keydown", () => ensureAudioContext(sfx), { once: true });
+window.addEventListener("pointerdown", () => ensureAudioContext(sfx), { once: true });
+
 wireTouchControls(
   document,
   () => scene,
   () => match.phase,
-  () => triggerShake(shake),
+  () => {
+    triggerShake(shake);
+    playImpact(sfx);
+  },
 );
 const hud = queryHudElements(document);
+renderMuteToggle(hud.muteToggle, isMuted(sfx));
 
 function startRematch(): void {
   match = createMatchState();
@@ -39,7 +61,14 @@ function startRematch(): void {
 
 hud.rematchButton.addEventListener("click", () => {
   if (match.phase !== "matchOver") return;
+  playUiClick(sfx);
   startRematch();
+});
+
+hud.muteToggle.addEventListener("click", () => {
+  const muted = toggleMute(sfx);
+  renderMuteToggle(hud.muteToggle, muted);
+  if (!muted) playUiClick(sfx);
 });
 
 // createStage already resizes the canvas backing store on window resize;
@@ -70,7 +99,10 @@ function tick(now: number): void {
         keyboard,
         PLAYER_TWO_CONTROLS,
       );
-      if (actionsA.length > 0 || actionsB.length > 0) triggerShake(shake);
+      if (actionsA.length > 0 || actionsB.length > 0) {
+        triggerShake(shake);
+        playImpact(sfx);
+      }
     } else if (match.phase === "matchOver") {
       // Still consume presses outside "fighting" so a trailing key doesn't
       // queue up and throw a punch the instant the round resumes. A punch/
@@ -100,6 +132,9 @@ function tick(now: number): void {
       },
       FIXED_DT,
     );
+    if (previousPhase === "fighting" && match.phase === "roundOver") {
+      playKnockout(sfx);
+    }
     // A fresh arena and starting pose for every round, not just every match,
     // so a rematch (and every round within it) varies per docs/VISION.md.
     if (previousPhase === "roundOver" && match.phase === "countdown") {
