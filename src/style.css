@@ -122,6 +122,50 @@ body {
   text-shadow: 0 0 10px var(--success);
 }
 
+/* The mute toggle sits in the HUD's center column per docs/DESIGN.md's
+   "footer strip below the canvas shows control hints and the mute toggle" —
+   adapted to a full-bleed canvas with no footer strip to put it in. */
+.mute-toggle {
+  pointer-events: auto;
+  margin-top: 4px;
+  padding: 4px 10px;
+  border: 2px solid var(--text-muted);
+  border-radius: 2px;
+  background: var(--surface-1);
+  color: var(--text-muted);
+  font-family: var(--font-ui);
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition:
+    transform 150ms ease-out,
+    background-color 150ms ease-out,
+    color 150ms ease-out,
+    box-shadow 150ms ease-out;
+}
+
+.mute-toggle:hover {
+  color: var(--text);
+  background: var(--surface-2);
+}
+
+.mute-toggle:active {
+  transform: scale(0.94);
+}
+
+.mute-toggle:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 2px var(--bg),
+    0 0 10px var(--accent-support);
+}
+
+.mute-toggle[aria-pressed="true"] {
+  border-color: var(--accent-support);
+  color: var(--accent-support);
+}
+
 @media (max-width: 480px) {
   #hud {
     padding: 8px 12px;
@@ -147,6 +191,11 @@ body {
 
   .hud-phase-message {
     font-size: 12px;
+  }
+
+  .mute-toggle {
+    padding: 3px 8px;
+    font-size: 9px;
   }
 }
 
