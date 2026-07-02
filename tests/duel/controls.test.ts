@@ -3,6 +3,7 @@ import type { KeyboardInput } from "../../src/input/keyboard";
 import { createRagdoll } from "../../src/ragdoll/skeleton";
 import {
   applyPlayerActions,
+  facingDirection,
   PLAYER_ONE_CONTROLS,
   PLAYER_TWO_CONTROLS,
   resolveActions,
@@ -49,6 +50,29 @@ describe("resolveActions", () => {
     const input = fakeInput([PLAYER_TWO_CONTROLS.punch]);
 
     expect(resolveActions(input, PLAYER_ONE_CONTROLS)).toEqual([]);
+  });
+});
+
+describe("facingDirection", () => {
+  it("faces right when the opponent is to the right", () => {
+    const ragdoll = createRagdoll(0, 0);
+    const opponent = createRagdoll(100, 0);
+
+    expect(facingDirection(ragdoll, opponent)).toBe(1);
+  });
+
+  it("faces left when the opponent is to the left", () => {
+    const ragdoll = createRagdoll(100, 0);
+    const opponent = createRagdoll(0, 0);
+
+    expect(facingDirection(ragdoll, opponent)).toBe(-1);
+  });
+
+  it("defaults to facing right when exactly aligned (a tie has to pick something)", () => {
+    const ragdoll = createRagdoll(50, 0);
+    const opponent = createRagdoll(50, 0);
+
+    expect(facingDirection(ragdoll, opponent)).toBe(1);
   });
 });
 
