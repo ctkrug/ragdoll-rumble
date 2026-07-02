@@ -102,7 +102,7 @@ Tests mirror this layout 1:1 under `tests/` (`tests/physics/`, `tests/arena/`, `
   magnitudes (`duel/impulse.ts`) aren't tuned to reliably launch a ragdoll into a platform edge,
   but revisit this if a future move (e.g. a stronger lunge) makes that reachable.
 - **`resolveSegmentCollision` gates on a frame-start position snapshot, not `point.prevPos`.**
-  A one-sided segment with no "did it cross this frame" check reads any point below a *finite*
+  A one-sided segment with no "did it cross this frame" check reads any point below a _finite_
   floating platform as permanently penetrating from any distance — since platforms always spawn
   above a standing ragdoll's head, this used to suck every ragdoll onto the nearest platform and
   fling it off-screen within a couple of frames. `solver.step` snapshots every point's
