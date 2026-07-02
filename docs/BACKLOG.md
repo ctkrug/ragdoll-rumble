@@ -95,8 +95,10 @@ Make it feel good and get it in front of people.
       `MatchState.totalHitsLanded`), and a particle burst themed to the winner's color
       (`src/ui/hud.ts`'s `triggerWinCelebration`), before the existing title + rematch CTA.
       Reduced motion drops the stamp animation and particles, keeps the text.
-- [x] Design polish: landing page at `public/site/` (Vite copies `public/` verbatim into
-      `dist/`, so it ships as `dist/site/` alongside the built app), sharing `docs/DESIGN.md`'s
-      tokens/fonts and featuring a live iframe preview of the actual game. Verified the built
-      output serves correctly and every relative link/iframe-src resolves from an arbitrary
-      subpath (`vite preview`, no hardcoded absolute paths anywhere).
+- [x] Design polish: because the game is servable, its landing page is the app page itself. A
+      static `.about` marketing/SEO section lives below the fold in `index.html` (wordmark, View on
+      GitHub CTA, benefit-framed features, control reference, "how it's built", FAQ, and a
+      portfolio cross-promo link), sharing `docs/DESIGN.md`'s tokens so game and page are one
+      brand. Verified the built output serves correctly with only relative asset paths, at desktop
+      and phone widths. (An earlier standalone `public/site/` landing was folded into this section
+      and removed, since the served front door is the game, not a separate page.)

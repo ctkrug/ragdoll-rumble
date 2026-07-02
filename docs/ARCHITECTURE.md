@@ -96,22 +96,21 @@ src/
                       round.
   style.css           Design tokens (docs/DESIGN.md) as CSS variables, CRT scanline/vignette,
                       touch control + HUD + match-overlay (K.O. stamp, stats, particles) +
-                      mute-toggle theming.
+                      mute-toggle theming, plus the below-the-fold `.about` marketing/SEO section.
+index.html            The single served page: the full-viewport arena (`#app`) is the hero, and a
+                      static `.about` section below the fold carries the marketing + SEO copy
+                      (wordmark, View on GitHub CTA, features, controls, "how it's built", FAQ,
+                      portfolio cross-promo). Because the game IS the front door for a servable
+                      app, its "landing page" lives on the same page rather than in a separate file.
 public/
-  site/               The marketing landing page — plain HTML/CSS, deliberately outside the
-                       Vite/TypeScript build (no bundler step of its own). Vite copies public/
-                       verbatim into dist/, so it ships as dist/site/ alongside the built app.
-                       Its stylesheet intentionally duplicates docs/DESIGN.md's tokens rather than
-                       importing src/style.css, since src/ isn't part of the deployed dist/ output.
-                       Its hero embeds a live <iframe src="../index.html"> of the actual game — a
-                       genuine live preview, not a screenshot — plus a Play Now CTA to the same
-                       URL. Every link is relative so the page (and the iframe it embeds) resolves
-                       correctly served from any subpath.
+  preview*.png        Real gameplay screenshots (desktop face-off, phone touch layout) for the
+                       README. Vite copies public/ verbatim into dist/, so they ship at
+                       dist/preview*.png and are reachable with a relative path.
 ```
 
 Tests mirror this layout 1:1 under `tests/` (`tests/physics/`, `tests/arena/`, `tests/ragdoll/`,
-`tests/duel/`, `tests/input/`, `tests/ui/`, `tests/render/`). `public/site/` has no test
-coverage of its own — it's static markup with no logic to unit test; verify it by building
+`tests/duel/`, `tests/input/`, `tests/ui/`, `tests/render/`). `index.html`'s `.about` section has
+no test coverage of its own — it's static markup with no logic to unit test; verify it by building
 (`npm run build`) and serving `dist/` (e.g. `npx vite preview`).
 
 ## Data flow
