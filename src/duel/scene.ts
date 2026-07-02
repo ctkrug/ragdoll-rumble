@@ -1,9 +1,11 @@
+import { floorHeightAt, generateArena, type Arena } from "../arena/generator";
 import { createRagdoll, ragdollPointList, type Ragdoll } from "../ragdoll/skeleton";
 import { resolveCapsuleCollision } from "../physics/capsule";
 import { step, type World } from "../physics/solver";
 
 export interface DuelScene {
   world: World;
+  arena: Arena;
   ragdollA: Ragdoll;
   ragdollB: Ragdoll;
 }
@@ -20,16 +22,24 @@ const ARM_REACH = 70;
  * height can make the ragdolls' reach exceed the gap between them, so a
  * fully splayed arm immediately collides at full force and flings both rigs
  * off-screen instead of settling.
+ *
+ * `seed` drives the procedural arena layout (floor tilt + platforms) so a
+ * rematch varies by default; pass an explicit seed to reproduce a match.
  */
-export function createDuelScene(width: number, height: number): DuelScene {
-  const floorY = height * 0.85;
+export function createDuelScene(
+  width: number,
+  height: number,
+  seed: number = Math.floor(Math.random() * 2 ** 32),
+): DuelScene {
+  const arena = generateArena(width, height, seed);
   const heightScale = (height * 0.4) / RAGDOLL_HEIGHT;
   const widthScale = (width * 0.3) / (2 * ARM_REACH);
   const scale = Math.min(heightScale, widthScale);
-  const neckY = floorY - 112 * scale;
 
-  const ragdollA = createRagdoll(width * 0.35, neckY, scale);
-  const ragdollB = createRagdoll(width * 0.65, neckY, scale);
+  const xA = width * 0.35;
+  const xB = width * 0.65;
+  const ragdollA = createRagdoll(xA, floorHeightAt(arena, xA) - 112 * scale, scale);
+  const ragdollB = createRagdoll(xB, floorHeightAt(arena, xB) - 112 * scale, scale);
 
   const world: World = {
     points: [...ragdollPointList(ragdollA), ...ragdollPointList(ragdollB)],
@@ -37,11 +47,11 @@ export function createDuelScene(width: number, height: number): DuelScene {
     angleConstraints: [...ragdollA.joints, ...ragdollB.joints],
     gravity: { x: 0, y: 1400 },
     damping: 0.985,
-    geometry: [{ a: { x: 0, y: floorY }, b: { x: width, y: floorY } }],
+    geometry: arena.geometry,
     onIteration: () => resolveRagdollCollisions(ragdollA, ragdollB),
   };
 
-  return { world, ragdollA, ragdollB };
+  return { world, arena, ragdollA, ragdollB };
 }
 
 /** Pushes every limb of ragdoll A apart from every overlapping limb of ragdoll B. */
