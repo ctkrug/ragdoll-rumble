@@ -16,6 +16,31 @@
     <main id="app">
       <canvas id="stage" aria-label="Ragdoll Rumble arena"></canvas>
       <div id="crt-overlay" aria-hidden="true"></div>
+      <div id="hud">
+        <div class="hud-panel hud-panel--p1">
+          <span class="hud-label">P1</span>
+          <span class="hud-score" id="score-a"></span>
+        </div>
+        <div class="hud-round">
+          <span class="hud-round-label" id="round-label"></span>
+          <span
+            class="hud-phase-message"
+            id="phase-message"
+            role="status"
+            aria-live="polite"
+          ></span>
+        </div>
+        <div class="hud-panel hud-panel--p2">
+          <span class="hud-label">P2</span>
+          <span class="hud-score" id="score-b"></span>
+        </div>
+      </div>
+      <div id="match-overlay" hidden>
+        <div class="match-overlay-card">
+          <p id="match-overlay-title"></p>
+          <button type="button" id="rematch-button">Rematch</button>
+        </div>
+      </div>
       <div id="touch-controls" aria-label="Touch controls">
         <div class="touch-group touch-group--p1">
           <button type="button" class="touch-btn touch-btn--p1" data-player="1" data-action="punch">

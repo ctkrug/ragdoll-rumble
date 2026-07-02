@@ -51,6 +51,180 @@ body {
     radial-gradient(ellipse at center, rgba(0, 0, 0, 0) 55%, rgba(0, 0, 0, 0.55) 100%);
 }
 
+/* Round/score HUD: chunky bordered panels per docs/DESIGN.md's layout intent,
+   P1 magenta-framed top-left, P2 cyan-framed top-right, countdown/round-over
+   copy centered between them. Sits over the canvas, so it stays click-through
+   except where a control (the rematch button) actually needs it. */
+#hud {
+  position: absolute;
+  inset: 0 0 auto 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 16px 24px;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.hud-panel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: var(--surface-1);
+  border: 2px solid var(--accent);
+  border-radius: 2px;
+  box-shadow: 0 0 12px rgba(255, 46, 109, 0.35);
+}
+
+.hud-panel--p2 {
+  border-color: var(--accent-support);
+  box-shadow: 0 0 12px rgba(41, 224, 255, 0.35);
+}
+
+.hud-label {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+}
+
+.hud-score {
+  font-family: var(--font-ui);
+  font-size: 19px;
+  letter-spacing: 0.15em;
+  color: var(--text);
+}
+
+.hud-round {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding-top: 8px;
+  text-align: center;
+}
+
+.hud-round-label {
+  font-family: var(--font-display);
+  font-size: 12px;
+  color: var(--text);
+  text-shadow: 0 0 8px var(--accent-support);
+}
+
+.hud-phase-message {
+  display: block;
+  min-height: 1em;
+  font-family: var(--font-display);
+  font-size: 15px;
+  color: var(--success);
+  text-shadow: 0 0 10px var(--success);
+}
+
+@media (max-width: 480px) {
+  #hud {
+    padding: 8px 12px;
+    gap: 8px;
+  }
+
+  .hud-panel {
+    padding: 6px 10px;
+    gap: 4px;
+  }
+
+  .hud-label {
+    font-size: 10px;
+  }
+
+  .hud-score {
+    font-size: 15px;
+  }
+
+  .hud-round-label {
+    font-size: 10px;
+  }
+
+  .hud-phase-message {
+    font-size: 12px;
+  }
+}
+
+/* Match-over overlay: the "insert coin" moment, per docs/DESIGN.md's note
+   that the win-screen card is the one place that breaks from the game's
+   otherwise-pixel-edged 2px corner radius. */
+#match-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(11, 13, 23, 0.75);
+  z-index: 3;
+}
+
+#match-overlay[hidden] {
+  display: none;
+}
+
+.match-overlay-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  padding: 32px 48px;
+  background: var(--surface-1);
+  border: 2px solid var(--accent);
+  border-radius: 8px;
+  box-shadow: 0 0 24px var(--accent);
+}
+
+#match-overlay-title {
+  margin: 0;
+  max-width: 20ch;
+  font-family: var(--font-display);
+  font-size: 24px;
+  line-height: 1.4;
+  color: var(--text);
+  text-align: center;
+  text-shadow: 0 0 12px var(--accent);
+}
+
+#rematch-button {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 12px 24px;
+  border: 2px solid var(--accent);
+  border-radius: 2px;
+  background: var(--surface-2);
+  color: var(--text);
+  font-family: var(--font-ui);
+  font-size: 15px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition:
+    transform 150ms ease-out,
+    background-color 150ms ease-out,
+    box-shadow 150ms ease-out;
+}
+
+#rematch-button:hover {
+  background: var(--accent);
+  color: var(--bg);
+}
+
+#rematch-button:active {
+  transform: scale(0.94);
+}
+
+#rematch-button:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 2px var(--bg),
+    0 0 12px var(--accent);
+}
+
 /* Touch action buttons: hidden on desktop (keyboard is the primary input
    there), shown as a fixed footer strip on phone-width viewports per
    docs/DESIGN.md's phone layout. */
