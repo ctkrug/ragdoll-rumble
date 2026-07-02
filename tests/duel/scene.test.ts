@@ -38,23 +38,26 @@ describe("createDuelScene", () => {
 });
 
 describe("resolveRagdollCollisions", () => {
-  it("separates two overlapping torsos and reports contact", () => {
+  it("separates two overlapping torsos and reports contact with a point", () => {
     const a = createRagdoll(0, 0);
     const b = createRagdoll(5, 0);
     const before = length(sub(b.points.neck.pos, a.points.neck.pos));
 
-    const contact = resolveRagdollCollisions(a, b);
+    const result = resolveRagdollCollisions(a, b);
 
     const after = length(sub(b.points.neck.pos, a.points.neck.pos));
     expect(after).toBeGreaterThan(before);
-    expect(contact).toBe(true);
+    expect(result.contact).toBe(true);
+    expect(result.point).not.toBeNull();
   });
 
-  it("reports no contact when ragdolls are far apart", () => {
+  it("reports no contact and a null point when ragdolls are far apart", () => {
     const a = createRagdoll(0, 0);
     const b = createRagdoll(10000, 0);
 
-    expect(resolveRagdollCollisions(a, b)).toBe(false);
+    const result = resolveRagdollCollisions(a, b);
+    expect(result.contact).toBe(false);
+    expect(result.point).toBeNull();
   });
 });
 
@@ -89,9 +92,11 @@ describe("stepDuel", () => {
 
     stepDuel(scene, 1 / 60);
     expect(scene.contactThisStep).toBe(true);
+    expect(scene.contactPoint).not.toBeNull();
 
     const farScene = createDuelScene(1440, 900, 2);
     stepDuel(farScene, 1 / 60);
     expect(farScene.contactThisStep).toBe(false);
+    expect(farScene.contactPoint).toBeNull();
   });
 });

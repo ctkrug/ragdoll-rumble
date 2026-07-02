@@ -2,6 +2,7 @@ import { floorHeightAt, generateArena, type Arena } from "../arena/generator";
 import { createRagdoll, ragdollPointList, type Ragdoll } from "../ragdoll/skeleton";
 import { resolveCapsuleCollision } from "../physics/capsule";
 import { step, type World } from "../physics/solver";
+import type { Vec2 } from "../physics/vec2";
 
 export interface DuelScene {
   world: World;
@@ -10,6 +11,14 @@ export interface DuelScene {
   ragdollB: Ragdoll;
   /** Whether any limb of ragdollA overlapped a limb of ragdollB during the most recent stepDuel call. */
   contactThisStep: boolean;
+  /** Roughly where the most recent contactThisStep overlap happened; null when there's been none yet. */
+  contactPoint: Vec2 | null;
+}
+
+export interface RagdollCollisionResult {
+  contact: boolean;
+  /** The midpoint of whichever colliding limb pair was found last, or null if nothing overlapped. */
+  point: Vec2 | null;
 }
 
 /** A standing ragdoll's total height, head-top to foot, at scale 1. */
@@ -52,26 +61,41 @@ export function createDuelScene(
     geometry: arena.geometry,
   };
 
-  const scene: DuelScene = { world, arena, ragdollA, ragdollB, contactThisStep: false };
+  const scene: DuelScene = {
+    world,
+    arena,
+    ragdollA,
+    ragdollB,
+    contactThisStep: false,
+    contactPoint: null,
+  };
   world.onIteration = () => {
-    if (resolveRagdollCollisions(ragdollA, ragdollB)) scene.contactThisStep = true;
+    const result = resolveRagdollCollisions(ragdollA, ragdollB);
+    if (result.contact) {
+      scene.contactThisStep = true;
+      scene.contactPoint = result.point;
+    }
   };
 
   return scene;
 }
 
-/**
- * Pushes every limb of ragdoll A apart from every overlapping limb of
- * ragdoll B. Returns whether any pair actually overlapped.
- */
-export function resolveRagdollCollisions(a: Ragdoll, b: Ragdoll): boolean {
+/** Pushes every limb of ragdoll A apart from every overlapping limb of ragdoll B. */
+export function resolveRagdollCollisions(a: Ragdoll, b: Ragdoll): RagdollCollisionResult {
   let contact = false;
+  let point: Vec2 | null = null;
   for (const limbA of a.limbs) {
     for (const limbB of b.limbs) {
-      if (resolveCapsuleCollision(limbA, limbB)) contact = true;
+      if (resolveCapsuleCollision(limbA, limbB)) {
+        contact = true;
+        point = {
+          x: (limbA.a.pos.x + limbB.a.pos.x) / 2,
+          y: (limbA.a.pos.y + limbB.a.pos.y) / 2,
+        };
+      }
     }
   }
-  return contact;
+  return { contact, point };
 }
 
 /** Steps the physics world one fixed tick, resetting/recomputing contactThisStep as it goes. */
