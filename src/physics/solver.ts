@@ -39,6 +39,18 @@ export function step(world: World, dt: number): void {
     integratePoint(point, world.gravity, world.damping, dt);
   }
 
+  // Snapshot each point's post-integration position once, before any
+  // relaxation: resolveSegmentCollision uses it to tell "was this point on
+  // the surface's near side before this frame's constraint solving" from
+  // "has it always been on the far side" (e.g. resting under a floating
+  // platform). point.prevPos can't serve as that reference — angle-constraint
+  // corrections deliberately shift it mid-frame to stay velocity-neutral, so
+  // it drifts alongside pos under sustained joint load instead of holding
+  // still as a frame-start snapshot.
+  const frameStartPositions = new Map<VerletPoint, Vec2>(
+    world.points.map((point) => [point, { ...point.pos }]),
+  );
+
   for (let i = 0; i < CONSTRAINT_ITERATIONS; i++) {
     for (const constraint of world.constraints) {
       satisfyDistanceConstraint(constraint);
@@ -49,14 +61,15 @@ export function step(world: World, dt: number): void {
       }
     }
     world.onIteration?.();
-    applyGeometryCollision(world);
+    applyGeometryCollision(world, frameStartPositions);
   }
 }
 
-function applyGeometryCollision(world: World): void {
+function applyGeometryCollision(world: World, frameStartPositions: Map<VerletPoint, Vec2>): void {
   for (const point of world.points) {
+    const frameStartPos = frameStartPositions.get(point) ?? point.pos;
     for (const segment of world.geometry) {
-      resolveSegmentCollision(point, segment, FLOOR_FRICTION);
+      resolveSegmentCollision(point, segment, FLOOR_FRICTION, frameStartPos);
     }
   }
 }
