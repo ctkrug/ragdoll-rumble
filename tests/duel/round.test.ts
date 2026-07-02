@@ -65,6 +65,23 @@ describe("advanceMatch during countdown", () => {
     expect(state.phase).toBe("fighting");
     expect(state.phaseTime).toBe(0);
   });
+
+  it("ignores KO status entirely during countdown", () => {
+    const state = createMatchState();
+
+    advanceMatch(
+      state,
+      { offArenaA: true, offArenaB: true, downA: true, downB: true },
+      COUNTDOWN_SECONDS - 0.5,
+    );
+
+    // A round can only end from "fighting"; countdown transitions on its
+    // timer alone. main.ts leans on this to freeze physics during the
+    // countdown (see docs/ARCHITECTURE.md) without worrying that a stale KO
+    // reading from before the freeze could end the round early.
+    expect(state.phase).toBe("countdown");
+    expect(state.roundWinner).toBeNull();
+  });
 });
 
 describe("advanceMatch during fighting", () => {
