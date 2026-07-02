@@ -2,11 +2,14 @@ import type { VerletPoint } from "./point";
 import { integratePoint } from "./point";
 import type { DistanceConstraint } from "./constraint";
 import { satisfyDistanceConstraint } from "./constraint";
+import type { AngleConstraint } from "./angleConstraint";
+import { satisfyAngleConstraint } from "./angleConstraint";
 import type { Vec2 } from "./vec2";
 
 export interface World {
   points: VerletPoint[];
   constraints: DistanceConstraint[];
+  angleConstraints?: AngleConstraint[];
   gravity: Vec2;
   damping: number;
   /** Ground line; points are clamped above it. */
@@ -27,6 +30,11 @@ export function step(world: World, dt: number): void {
   for (let i = 0; i < CONSTRAINT_ITERATIONS; i++) {
     for (const constraint of world.constraints) {
       satisfyDistanceConstraint(constraint);
+    }
+    if (world.angleConstraints) {
+      for (const angleConstraint of world.angleConstraints) {
+        satisfyAngleConstraint(angleConstraint);
+      }
     }
     applyFloorCollision(world);
   }
