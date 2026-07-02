@@ -14,7 +14,7 @@ Turn the generic physics core (`src/physics/`) into an actual humanoid.
       backward. (`src/physics/angleConstraint.ts`, wired into `solver.step`)
 - [x] Add capsule/circle collision shapes per limb segment for opponent collision.
       (`src/physics/capsule.ts`, used by `duel/scene.ts` for ragdoll-vs-ragdoll). Arena-geometry
-      collision (vs. platforms) is Epic 2's job, not done yet.
+      collision (vs. platforms) landed in Epic 2 (`src/physics/segment.ts`).
 - [ ] Design polish: tune stiffness, damping, and constraint iteration count until the rig
       reads as floppy-but-controllable rather than either rigid or spaghetti. Fixed a real
       instability this run (angle-constraint corrections were injecting momentum and flinging
@@ -26,13 +26,18 @@ Turn the generic physics core (`src/physics/`) into an actual humanoid.
 
 Give the ragdolls somewhere to fight and something to collide with besides a flat floor.
 
-- [ ] Procedural arena generator: platform layout and floor tilt driven by a seed, reproducible
-      per match.
-- [ ] Arena geometry collision against line-segment platforms and tilted floors (replace the
-      scaffold's flat `floorY` clamp with real segment collision).
-- [ ] Ragdoll-vs-ragdoll collision resolution so limbs push apart instead of interpenetrating.
-- [ ] Design polish: arena visuals (background, platform styling, lighting) match the tokens
-      and aesthetic direction in `docs/DESIGN.md`.
+- [x] Procedural arena generator: platform layout and floor tilt driven by a seed, reproducible
+      per match. (`src/arena/prng.ts`, `src/arena/generator.ts`)
+- [x] Arena geometry collision against line-segment platforms and tilted floors (replace the
+      scaffold's flat `floorY` clamp with real segment collision). (`src/physics/segment.ts`,
+      `World.geometry` in `src/physics/solver.ts`)
+- [x] Ragdoll-vs-ragdoll collision resolution so limbs push apart instead of interpenetrating.
+      (landed in Epic 1 as `resolveRagdollCollisions` in `duel/scene.ts`; verified here with
+      `tests/duel/scene.test.ts`'s overlap test)
+- [x] Design polish: arena visuals (background, platform styling, lighting) match the tokens
+      and aesthetic direction in `docs/DESIGN.md`. (platforms render as square-capped bars with a
+      bright top-edge light strip in `src/render/duel.ts`; background/CRT overlay predate this
+      epic and already matched)
 
 ## Epic 3 — Duel loop
 
