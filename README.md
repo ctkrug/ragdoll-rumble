@@ -16,22 +16,16 @@ rather than broken. The physics _is_ the game.
 
 - Two humanoid ragdolls, each built from a chain of point masses and constraints (think:
   a stick figure made of rope, not rigid bones).
-- Player(s) apply impulses to one ragdoll's limbs; physics resolves everything else — momentum,
-  collisions, floor friction, and the inevitable comedic collapse.
-- Arenas are procedurally varied: shifting platform layouts, tilted floors, occasional hazards,
-  so no two rumbles resolve the same way even with identical inputs.
+- Two-player local duel: keyboard (split control scheme) or on-screen touch controls throw
+  punches, kicks, and lunges; physics resolves everything else — momentum, collisions, floor
+  friction, and the inevitable comedic collapse.
+- A best-of-3 round/match flow with a countdown, knockout detection (flung off-arena or pinned
+  on your back), score HUD, and a win-celebration overlay with match stats.
+- Impact feedback: screen shake, an impact flash at the point of contact, a brief hitstop
+  freeze-frame, and synthesized WebAudio SFX with a persisted mute toggle.
+- Arenas are procedurally varied: shifting platform layouts and tilted floors driven by a seed,
+  so no two rumbles resolve the same way (and a seed reproduces one exactly).
 - Entirely canvas-rendered, entirely client-side, zero server, zero physics library dependency.
-
-## Planned features
-
-- Verlet-integration point-mass system with configurable gravity, damping, and substeps.
-- Distance constraints (limb rigidity) and angle constraints (joint limits) solved iteratively
-  (Gauss-Seidel-style relaxation) for stable, non-exploding ragdolls.
-- Capsule/circle collision against arena geometry and against the opposing ragdoll.
-- Procedural arena generation (platform placement, tilt, hazards) with a fixed seed per match
-  for reproducible replays.
-- Local two-player input (keyboard, split control scheme) driving limb impulses.
-- Juicy game feel: impact shake, hit-stop, synthesized WebAudio SFX, and a proper win screen.
 
 ## Stack
 
@@ -39,22 +33,38 @@ rather than broken. The physics _is_ the game.
   the DOM/Canvas APIs.
 - **Vite** for dev server and static production builds (outputs a single relocatable `dist/`).
 - **Vitest** for unit tests against the physics core (points, constraints, solver stability).
-- **GitHub Actions** for CI (typecheck, lint, test, build) on every push.
+- **GitHub Actions** for CI (format, lint, typecheck, test, build) on every push.
 
 ## Status
 
-The physics core (Verlet points, distance constraints, angle/joint-limit constraints, capsule
-collision) is built and tested, and two fully-rigged humanoid ragdolls duel in a shared arena
-with ragdoll-vs-ragdoll collision. No player input yet — the next milestone is impulse-driven
-controls. See [`docs/VISION.md`](docs/VISION.md) for the full design rationale,
+Feature-complete and in QA hardening: the physics core (Verlet points, distance/angle
+constraints, capsule collision), procedural arenas, two-player input, the full countdown ->
+round -> match loop, and the juice pass (shake, impact flash, hitstop, SFX, win celebration)
+are all built and tested. See [`docs/VISION.md`](docs/VISION.md) for the full design rationale,
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for a map of the code, and
-[`docs/BACKLOG.md`](docs/BACKLOG.md) for the build plan.
+[`docs/BACKLOG.md`](docs/BACKLOG.md) for what's left.
 
 ## Developing
 
 ```sh
 npm install
-npm run dev       # local dev server with hot reload
-npm test          # run the physics unit tests
-npm run build     # produce a static dist/ build
+npm run dev         # local dev server with hot reload
+npm test            # run the unit test suite
+npm run typecheck   # tsc --noEmit
+npm run lint        # eslint
+npm run format      # prettier --check
+npm run build       # produce a static dist/ build
 ```
+
+## Playing
+
+Open the dev server in a browser. Two players share the keyboard:
+
+| Action | Player 1 | Player 2 |
+| ------ | -------- | -------- |
+| Punch  | `F`      | `/`      |
+| Kick   | `G`      | `.`      |
+| Lunge  | `H`      | `,`      |
+
+On a phone-width viewport, on-screen touch buttons replace the keyboard controls. First to 2
+round wins takes the match; hit Rematch (or throw a punch/kick/lunge) to go again.
