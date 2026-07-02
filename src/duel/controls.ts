@@ -32,18 +32,22 @@ export function resolveActions(input: KeyboardInput, scheme: ControlScheme): Imp
 }
 
 /**
- * Polls one player's scheme and applies any resulting impulses to their
- * ragdoll, aimed toward wherever the opponent currently is (recomputed every
- * call rather than fixed at spawn, since either ragdoll can end up on either
- * side after a hit).
+ * Which way a ragdoll should aim an impulse to reach the opponent, recomputed
+ * every call rather than fixed at spawn since either ragdoll can end up on
+ * either side after a hit.
  */
+export function facingDirection(ragdoll: Ragdoll, opponent: Ragdoll): 1 | -1 {
+  return opponent.points.pelvis.pos.x >= ragdoll.points.pelvis.pos.x ? 1 : -1;
+}
+
+/** Polls one player's scheme and applies any resulting impulses to their ragdoll. */
 export function applyPlayerActions(
   ragdoll: Ragdoll,
   opponent: Ragdoll,
   input: KeyboardInput,
   scheme: ControlScheme,
 ): void {
-  const direction: 1 | -1 = opponent.points.pelvis.pos.x >= ragdoll.points.pelvis.pos.x ? 1 : -1;
+  const direction = facingDirection(ragdoll, opponent);
   for (const action of resolveActions(input, scheme)) {
     applyImpulse(ragdoll, action, direction);
   }
