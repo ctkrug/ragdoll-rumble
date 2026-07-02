@@ -1,6 +1,7 @@
 import type { Stage } from "./canvas";
 import type { Arena } from "../arena/generator";
 import type { DuelScene } from "../duel/scene";
+import type { Vec2 } from "../physics/vec2";
 import { renderRagdoll } from "./ragdoll";
 
 const BG = "#0b0d17";
@@ -15,16 +16,31 @@ const PLATFORM_THICKNESS = 10;
 const PLAYER_ONE_THEME = { limbColor: "#ff2e6d", headColor: "#ff6b9c", glowColor: "#ff2e6d" };
 const PLAYER_TWO_THEME = { limbColor: "#29e0ff", headColor: "#7cf0ff", glowColor: "#29e0ff" };
 
-export function renderDuelScene(stage: Stage, scene: DuelScene): void {
+/**
+ * `shakeOffset` nudges everything but the background fill (a camera shake
+ * that moved the background too would just look like the whole canvas is
+ * jittering, not an impact) — see render/screenShake.ts for where it comes
+ * from.
+ */
+export function renderDuelScene(
+  stage: Stage,
+  scene: DuelScene,
+  shakeOffset: Vec2 = { x: 0, y: 0 },
+): void {
   const { ctx } = stage;
 
   ctx.fillStyle = BG;
   ctx.fillRect(0, 0, stage.width, stage.height);
 
+  ctx.save();
+  ctx.translate(shakeOffset.x, shakeOffset.y);
+
   renderArena(ctx, scene.arena);
 
   renderRagdoll(ctx, scene.ragdollA, PLAYER_ONE_THEME);
   renderRagdoll(ctx, scene.ragdollB, PLAYER_TWO_THEME);
+
+  ctx.restore();
 }
 
 /**
