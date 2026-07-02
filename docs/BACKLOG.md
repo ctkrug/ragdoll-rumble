@@ -72,10 +72,21 @@ Turn two rigged ragdolls into an actual playable match.
 
 Make it feel good and get it in front of people.
 
-- [ ] Movement tweening and impact feedback: bump/flash/shake on collision per the juice plan
-      in `docs/DESIGN.md`.
-- [ ] WebAudio-synthesized SFX (hit, step, win) with a mute toggle persisted to localStorage.
+- [x] Movement tweening: already inherent — every limb is a real Verlet point rendered every
+      frame, so motion is continuous, never a teleport. Impact feedback: landed. Screen shake
+      (`src/render/screenShake.ts`, ≤120ms/≤6px per `docs/DESIGN.md`, `prefers-reduced-motion`
+      aware) fires on every landed keyboard/touch hit (`main.ts`). Still open from the juice
+      plan's impact-feedback bullet: the white impact-point flash and the ~40ms hitstop.
+- [x] WebAudio-synthesized SFX (`src/audio/sfx.ts`): step/swing/impact/knockout/uiClick
+      oscillator+noise SFX, one shared gain node, self-throttled, mute toggle in the HUD
+      persisted to `localStorage`, `AudioContext` created lazily on first user gesture. Wired
+      into gameplay: `playImpact` on a landed hit, `playKnockout` on a real KO, `playUiClick` on
+      the mute/rematch buttons. `playStep` and `playSwing` exist and are tested but aren't wired
+      up — see `docs/ARCHITECTURE.md`'s gotcha (no locomotion mechanic for step; no landed-hit
+      signal to distinguish a swing from a connect for swing).
 - [ ] Win celebration overlay (match stats, particles, rematch CTA) plus `prefers-reduced-motion`
-      support throughout.
+      support throughout. The match-over overlay + rematch CTA already exist (Epic 3's round flow
+      story); still open: match stats, the pixel-particle burst, and the K.O. stamp-card moment
+      `docs/DESIGN.md`'s signature-detail section describes.
 - [ ] Design polish: bring the landing/site page (`site/`) to the same brand and tokens as the
       in-game UI, and verify the static build serves correctly from a subpath.
