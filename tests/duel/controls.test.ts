@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 import type { KeyboardInput } from "../../src/input/keyboard";
-import { PLAYER_ONE_CONTROLS, PLAYER_TWO_CONTROLS, resolveActions } from "../../src/duel/controls";
+import { createRagdoll } from "../../src/ragdoll/skeleton";
+import {
+  applyPlayerActions,
+  PLAYER_ONE_CONTROLS,
+  PLAYER_TWO_CONTROLS,
+  resolveActions,
+} from "../../src/duel/controls";
 
 function fakeInput(pressed: string[]): KeyboardInput {
   const pending = new Set(pressed);
@@ -43,5 +49,42 @@ describe("resolveActions", () => {
     const input = fakeInput([PLAYER_TWO_CONTROLS.punch]);
 
     expect(resolveActions(input, PLAYER_ONE_CONTROLS)).toEqual([]);
+  });
+});
+
+describe("applyPlayerActions", () => {
+  it("aims the impulse toward wherever the opponent currently is", () => {
+    const left = createRagdoll(0, 0);
+    const right = createRagdoll(100, 0);
+    const rightHandBefore = { ...left.points.rightHand.pos };
+
+    applyPlayerActions(left, right, fakeInput([PLAYER_ONE_CONTROLS.punch]), PLAYER_ONE_CONTROLS);
+
+    expect(left.points.rightHand.pos.x).toBeGreaterThan(rightHandBefore.x);
+  });
+
+  it("flips direction once the opponent ends up on the other side", () => {
+    const left = createRagdoll(0, 0);
+    const nowOnTheLeft = createRagdoll(-100, 0);
+    const leftHandBefore = { ...left.points.leftHand.pos };
+
+    applyPlayerActions(
+      left,
+      nowOnTheLeft,
+      fakeInput([PLAYER_ONE_CONTROLS.punch]),
+      PLAYER_ONE_CONTROLS,
+    );
+
+    expect(left.points.leftHand.pos.x).toBeLessThan(leftHandBefore.x);
+  });
+
+  it("does nothing when no control-scheme key was pressed", () => {
+    const ragdoll = createRagdoll(0, 0);
+    const opponent = createRagdoll(100, 0);
+    const before = JSON.parse(JSON.stringify(ragdoll.points));
+
+    applyPlayerActions(ragdoll, opponent, fakeInput([]), PLAYER_ONE_CONTROLS);
+
+    expect(ragdoll.points).toEqual(before);
   });
 });
