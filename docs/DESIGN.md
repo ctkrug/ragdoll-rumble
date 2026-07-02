@@ -7,8 +7,8 @@ follow this brief. Change it only deliberately, in its own commit, with a note o
 
 **Ragdoll Rumble is a retro fight-cabinet:** scanlined CRT glow, chunky pixel-edged UI, and
 radioactive neon over a dim arcade-hall dark. It should feel like it's running on a beat-up
-cabinet in the back of an arcade — a little grimy, a little glowing, unmistakably a *fighting
-game*, not a productivity app.
+cabinet in the back of an arcade — a little grimy, a little glowing, unmistakably a _fighting
+game_, not a productivity app.
 
 This is deliberately distinct from a generic "dark mode SaaS" look: hard pixel-ish edges instead
 of soft rounded cards, neon magenta/cyan instead of a single muted accent, and a literal CRT
@@ -18,17 +18,17 @@ scanline/flicker treatment rather than a flat gradient.
 
 **Color**
 
-| Token | Value | Use |
-|---|---|---|
-| `bg` | `#0b0d17` | page background — near-black indigo, not pure black |
-| `surface-1` | `#161a2b` | panels, HUD frames |
-| `surface-2` | `#1f2540` | raised elements, hovered panels |
-| `text` | `#f4f6ff` | primary text |
-| `text-muted` | `#8b93b8` | secondary text, hints |
-| `accent` (Player 1 / primary CTA) | `#ff2e6d` | hot magenta — P1 color, primary buttons |
-| `accent-support` (Player 2) | `#29e0ff` | cyan — P2 color, secondary highlights |
-| `success` | `#4dff88` | win states, positive feedback |
-| `danger` | `#ff4d4d` | low health, KO warnings |
+| Token                             | Value     | Use                                                 |
+| --------------------------------- | --------- | --------------------------------------------------- |
+| `bg`                              | `#0b0d17` | page background — near-black indigo, not pure black |
+| `surface-1`                       | `#161a2b` | panels, HUD frames                                  |
+| `surface-2`                       | `#1f2540` | raised elements, hovered panels                     |
+| `text`                            | `#f4f6ff` | primary text                                        |
+| `text-muted`                      | `#8b93b8` | secondary text, hints                               |
+| `accent` (Player 1 / primary CTA) | `#ff2e6d` | hot magenta — P1 color, primary buttons             |
+| `accent-support` (Player 2)       | `#29e0ff` | cyan — P2 color, secondary highlights               |
+| `success`                         | `#4dff88` | win states, positive feedback                       |
+| `danger`                          | `#ff4d4d` | low health, KO warnings                             |
 
 **Type**
 
@@ -88,11 +88,11 @@ in with the winner's accent color and a pixel-particle burst.
 - **Win celebration:** overlay with a pixel-particle burst in the winner's accent color, a stats
   card (hits landed, longest combo, match duration), and one clear "Rematch" CTA.
 - **Synth SFX (WebAudio, oscillators/noise — zero binary assets):**
-  - *step*: short low sine blip, low volume, rate-throttled.
-  - *swing/whiff*: filtered noise burst with fast decay.
-  - *impact/hit*: square wave with a fast pitch drop, layered with a short noise "crunch."
-  - *knockout*: rising square-wave arpeggio, the one moment allowed to be loud.
-  - *UI click*: short triangle-wave blip.
+  - _step_: short low sine blip, low volume, rate-throttled.
+  - _swing/whiff_: filtered noise burst with fast decay.
+  - _impact/hit_: square wave with a fast pitch drop, layered with a short noise "crunch."
+  - _knockout_: rising square-wave arpeggio, the one moment allowed to be loud.
+  - _UI click_: short triangle-wave blip.
   - All SFX route through a shared gain node; a mute button (HUD footer) toggles it and persists
     to `localStorage`. The `AudioContext` is created lazily on first user gesture (keydown or
     click) and every call site guards for its absence (tests, unsupported environments).

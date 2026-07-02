@@ -4,7 +4,7 @@
 
 Ragdoll physics is a genuinely fun thing to watch, but almost every hobby implementation of it
 is "drop `matter.js` or `Box2D` in and wire up some joints." That's a legitimate way to ship a
-game, but it teaches you nothing about *why* ragdolls look the way they do, and it means the
+game, but it teaches you nothing about _why_ ragdolls look the way they do, and it means the
 "physics engine" is really just a rendering layer on someone else's math. Ragdoll Rumble exists
 to do the harder, more interesting thing: build the constraint solver itself, tune it by hand
 until floppy limbs read as funny instead of glitchy, and turn that into a two-player duel.
