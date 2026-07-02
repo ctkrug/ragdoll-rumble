@@ -1,6 +1,7 @@
 import { applyImpulse, type ImpulseAction } from "../duel/impulse";
 import { facingDirection } from "../duel/controls";
 import type { DuelScene } from "../duel/scene";
+import type { RoundPhase } from "../duel/round";
 
 const IMPULSE_ACTIONS: ImpulseAction[] = ["punch", "kick", "lunge"];
 
@@ -29,9 +30,17 @@ export function parseTouchButton(
 /**
  * Wires every `[data-player][data-action]` button under `root` to apply a
  * combat impulse to the matching ragdoll, aimed at the current opponent.
- * Returns a disposer that removes all the listeners it added.
+ * Taps outside `"fighting"` are ignored — the countdown/round-over/match-over
+ * phases already gate keyboard input the same way (see main.ts), and a
+ * dedicated Rematch button covers the matchOver case touch would otherwise
+ * need a separate gesture for. Returns a disposer that removes all the
+ * listeners it added.
  */
-export function wireTouchControls(root: ParentNode, getScene: () => DuelScene): () => void {
+export function wireTouchControls(
+  root: ParentNode,
+  getScene: () => DuelScene,
+  getPhase: () => RoundPhase,
+): () => void {
   const buttons = Array.from(root.querySelectorAll<HTMLElement>("[data-player][data-action]"));
   const disposers: Array<() => void> = [];
 
@@ -41,6 +50,7 @@ export function wireTouchControls(root: ParentNode, getScene: () => DuelScene): 
 
     const handler = (event: Event): void => {
       event.preventDefault();
+      if (getPhase() !== "fighting") return;
       const scene = getScene();
       const ragdoll = target.player === "A" ? scene.ragdollA : scene.ragdollB;
       const opponent = target.player === "A" ? scene.ragdollB : scene.ragdollA;

@@ -21,7 +21,7 @@ const stage = createStage(canvas);
 let scene = createDuelScene(stage.width, stage.height);
 let match = createMatchState();
 const keyboard = createKeyboardInput(window);
-wireTouchControls(document, () => scene);
+wireTouchControls(document, () => scene, () => match.phase);
 const hud = queryHudElements(document);
 
 function startRematch(): void {
