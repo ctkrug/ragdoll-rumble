@@ -101,6 +101,20 @@ Tests mirror this layout 1:1 under `tests/` (`tests/physics/`, `tests/arena/`, `
   `resolveSegmentCollision`) snaps to that end rather than wrapping around it. The current impulse
   magnitudes (`duel/impulse.ts`) aren't tuned to reliably launch a ragdoll into a platform edge,
   but revisit this if a future move (e.g. a stronger lunge) makes that reachable.
+- **`resolveSegmentCollision` gates on a frame-start position snapshot, not `point.prevPos`.**
+  A one-sided segment with no "did it cross this frame" check reads any point below a *finite*
+  floating platform as permanently penetrating from any distance — since platforms always spawn
+  above a standing ragdoll's head, this used to suck every ragdoll onto the nearest platform and
+  fling it off-screen within a couple of frames. `solver.step` snapshots every point's
+  post-integration position before relaxation begins and passes it in as `frameStartPos`; only a
+  point that was on the surface's near side at that snapshot gets resolved, letting platforms be
+  passed under freely. This can't reuse `point.prevPos` for the same check because
+  `satisfyAngleConstraint` deliberately mutates `prevPos` mid-frame to stay velocity-neutral, so
+  under sustained joint tension it drifts deeper each relaxation iteration right along with `pos`
+  instead of holding still — using it let a hand/foot point escape correction and sink through a
+  resting floor entirely. `RESOLVE_TOLERANCE` (`segment.ts`) still allows shallow frame-start
+  overlap to resolve, so a point isn't permanently stuck the first time it ends a frame a few
+  pixels short of full convergence.
 - **Platform height band is deliberately clear of a standing ragdoll's head** (`generator.ts`'s
   `PLATFORM_Y_MIN/MAX_FRACTION`, 0.15-0.35 of arena height) so a platform never spawns overlapping
   a ragdoll at rest. They exist to be landed on/flung into with a strong enough hit.
