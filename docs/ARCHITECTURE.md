@@ -237,7 +237,13 @@ coverage of its own — it's static markup with no logic to unit test; verify it
   throw (keyboard or touch) for immediate input feedback; shake/flash/`playImpact`/hitstop only
   fire once the following physics step confirms contact. A swing thrown while the ragdolls are
   already overlapping (e.g. mid-grapple) still reads as a hit — there's no way yet to tell "this
-  specific punch reached" from "we were already touching when it was thrown."
+  specific punch reached" from "we were already touching when it was thrown." The inverse gap
+  also exists: a sustained grapple can build up enough separation force over many physics ticks
+  to fling someone off-arena for a real KO while `totalHitsLanded` stays at 0 for that stretch,
+  because none of those ticks happened to have a fresh swing thrown on the exact tick contact
+  resolved. Confirmed via playtesting (a `matchOver` reached "2 ROUNDS · 0 HITS LANDED"); treated
+  as acceptable for now — a grapple-driven ejection genuinely isn't the same event as a clean
+  landed punch, so the stat undercounting there is defensible, not obviously wrong.
 - **`playStep` is still unwired** — there's no locomotion mechanic to key it off (see the "no
   active balance/muscle control" gotcha above).
 - **Physics is frozen during `"countdown"`** (`main.ts` skips `stepDuel` while `match.phase ===
