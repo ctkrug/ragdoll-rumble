@@ -21,6 +21,7 @@ import { isOffArena, isPinnedFlat } from "./duel/koDetection";
 import { advanceMatch, createMatchState, MATCH_OVER_INPUT_DELAY_SECONDS } from "./duel/round";
 import { createKeyboardInput } from "./input/keyboard";
 import { renderDuelScene } from "./render/duel";
+import { createFlashState, triggerFlash, updateFlash } from "./render/impactFlash";
 import { createShakeState, shakeOffset, triggerShake, updateShake } from "./render/screenShake";
 import { queryHudElements, renderHud, renderMuteToggle } from "./ui/hud";
 import { wireTouchControls } from "./ui/touchControls";
@@ -33,6 +34,7 @@ let scene = createDuelScene(stage.width, stage.height);
 let match = createMatchState();
 const keyboard = createKeyboardInput(window);
 const shake = createShakeState();
+const flash = createFlashState();
 const sfx = createSfxEngine();
 const reducedMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
 
@@ -84,12 +86,27 @@ window.addEventListener("resize", () => {
 });
 
 const FIXED_DT = 1 / 60;
+/** A brief freeze-frame on a landed hit so the impact reads as punchy rather than mushy. */
+const HITSTOP_SECONDS = 0.045;
 let lastTime = performance.now();
 let accumulator = 0;
+let hitstopRemaining = 0;
 
 function tick(now: number): void {
-  accumulator += Math.min(now - lastTime, 250) / 1000;
+  const rawDt = Math.min(now - lastTime, 250) / 1000;
   lastTime = now;
+
+  if (hitstopRemaining > 0) {
+    hitstopRemaining = Math.max(0, hitstopRemaining - rawDt);
+    updateShake(shake, rawDt);
+    updateFlash(flash, rawDt);
+    renderDuelScene(stage, scene, shakeOffset(shake, reducedMotionQuery.matches), flash);
+    renderHud(hud, match);
+    requestAnimationFrame(tick);
+    return;
+  }
+
+  accumulator += rawDt;
 
   while (accumulator >= FIXED_DT) {
     let threwThisTick = touchThrewImpulse;
@@ -129,13 +146,18 @@ function tick(now: number): void {
 
     stepDuel(scene, FIXED_DT);
     updateShake(shake, FIXED_DT);
+    updateFlash(flash, FIXED_DT);
 
     // A landed hit is a swing that was thrown this tick AND resolved as real
     // ragdoll-vs-ragdoll contact this step — not just "a button was pressed,"
     // so a wild miss no longer shakes the screen or plays an impact thud.
     if (threwThisTick && scene.contactThisStep) {
       triggerShake(shake);
+      if (scene.contactPoint) triggerFlash(flash, scene.contactPoint);
       playImpact(sfx);
+      hitstopRemaining = HITSTOP_SECONDS;
+      accumulator -= FIXED_DT;
+      break;
     }
 
     const previousPhase = match.phase;
@@ -161,7 +183,7 @@ function tick(now: number): void {
     accumulator -= FIXED_DT;
   }
 
-  renderDuelScene(stage, scene, shakeOffset(shake, reducedMotionQuery.matches));
+  renderDuelScene(stage, scene, shakeOffset(shake, reducedMotionQuery.matches), flash);
   renderHud(hud, match);
   requestAnimationFrame(tick);
 }
