@@ -69,4 +69,11 @@ describe("isPinnedFlat", () => {
     ragdoll.points.pelvis.pos = { x: 500, y: 698 };
     expect(isPinnedFlat(ragdoll, arena)).toBe(false);
   });
+
+  it("is false for a degenerate zero-length torso rather than dividing by zero", () => {
+    const ragdoll = createRagdoll(500, 500);
+    ragdoll.points.neck.pos = { x: 500, y: 698 };
+    ragdoll.points.pelvis.pos = { x: 500, y: 698 };
+    expect(isPinnedFlat(ragdoll, arena)).toBe(false);
+  });
 });
