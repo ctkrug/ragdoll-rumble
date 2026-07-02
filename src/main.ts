@@ -18,12 +18,17 @@ import {
   PLAYER_TWO_CONTROLS,
 } from "./duel/controls";
 import { isOffArena, isPinnedFlat } from "./duel/koDetection";
-import { advanceMatch, createMatchState, MATCH_OVER_INPUT_DELAY_SECONDS } from "./duel/round";
+import {
+  advanceMatch,
+  createMatchState,
+  MATCH_OVER_INPUT_DELAY_SECONDS,
+  recordLandedHit,
+} from "./duel/round";
 import { createKeyboardInput } from "./input/keyboard";
 import { renderDuelScene } from "./render/duel";
 import { createFlashState, triggerFlash, updateFlash } from "./render/impactFlash";
 import { createShakeState, shakeOffset, triggerShake, updateShake } from "./render/screenShake";
-import { queryHudElements, renderHud, renderMuteToggle } from "./ui/hud";
+import { queryHudElements, renderHud, renderMuteToggle, triggerWinCelebration } from "./ui/hud";
 import { wireTouchControls } from "./ui/touchControls";
 
 const canvas = document.querySelector<HTMLCanvasElement>("#stage");
@@ -164,6 +169,7 @@ function tick(now: number): void {
       triggerShake(shake);
       if (scene.contactPoint) triggerFlash(flash, scene.contactPoint);
       playImpact(sfx);
+      recordLandedHit(match);
       hitstopRemaining = HITSTOP_SECONDS;
       accumulator -= FIXED_DT;
       break;
@@ -187,6 +193,9 @@ function tick(now: number): void {
     // so a rematch (and every round within it) varies per docs/VISION.md.
     if (previousPhase === "roundOver" && match.phase === "countdown") {
       scene = createDuelScene(stage.width, stage.height);
+    }
+    if (previousPhase !== "matchOver" && match.phase === "matchOver") {
+      triggerWinCelebration(hud, match);
     }
 
     accumulator -= FIXED_DT;
