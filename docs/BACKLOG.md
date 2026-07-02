@@ -95,5 +95,8 @@ Make it feel good and get it in front of people.
       `MatchState.totalHitsLanded`), and a particle burst themed to the winner's color
       (`src/ui/hud.ts`'s `triggerWinCelebration`), before the existing title + rematch CTA.
       Reduced motion drops the stamp animation and particles, keeps the text.
-- [ ] Design polish: bring the landing/site page (`site/`) to the same brand and tokens as the
-      in-game UI, and verify the static build serves correctly from a subpath.
+- [x] Design polish: landing page at `public/site/` (Vite copies `public/` verbatim into
+      `dist/`, so it ships as `dist/site/` alongside the built app), sharing `docs/DESIGN.md`'s
+      tokens/fonts and featuring a live iframe preview of the actual game. Verified the built
+      output serves correctly and every relative link/iframe-src resolves from an arbitrary
+      subpath (`vite preview`, no hardcoded absolute paths anywhere).

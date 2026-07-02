@@ -97,10 +97,22 @@ src/
   style.css           Design tokens (docs/DESIGN.md) as CSS variables, CRT scanline/vignette,
                       touch control + HUD + match-overlay (K.O. stamp, stats, particles) +
                       mute-toggle theming.
+public/
+  site/               The marketing landing page — plain HTML/CSS, deliberately outside the
+                       Vite/TypeScript build (no bundler step of its own). Vite copies public/
+                       verbatim into dist/, so it ships as dist/site/ alongside the built app.
+                       Its stylesheet intentionally duplicates docs/DESIGN.md's tokens rather than
+                       importing src/style.css, since src/ isn't part of the deployed dist/ output.
+                       Its hero embeds a live <iframe src="../index.html"> of the actual game — a
+                       genuine live preview, not a screenshot — plus a Play Now CTA to the same
+                       URL. Every link is relative so the page (and the iframe it embeds) resolves
+                       correctly served from any subpath.
 ```
 
 Tests mirror this layout 1:1 under `tests/` (`tests/physics/`, `tests/arena/`, `tests/ragdoll/`,
-`tests/duel/`, `tests/input/`, `tests/ui/`, `tests/render/`).
+`tests/duel/`, `tests/input/`, `tests/ui/`, `tests/render/`). `public/site/` has no test
+coverage of its own — it's static markup with no logic to unit test; verify it by building
+(`npm run build`) and serving `dist/` (e.g. `npx vite preview`).
 
 ## Data flow
 
