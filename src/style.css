@@ -19,12 +19,14 @@
 html,
 body {
   margin: 0;
-  height: 100%;
   background: var(--bg);
   color: var(--text);
   font-family: var(--font-ui);
 }
 
+/* The arena is the hero: a full-viewport section the canvas fills. The
+   marketing/SEO copy lives in normal flow below it (`.about`), so the page
+   scrolls past the fold rather than being pinned to one screen. */
 #app {
   position: relative;
   display: flex;
@@ -458,5 +460,226 @@ body {
     padding: 4px 5px;
     font-size: 10px;
     letter-spacing: 0.02em;
+  }
+}
+
+/* --- Below-the-fold marketing + SEO section ---------------------------------
+   The arena above (#app) is the hero; this is the story and the search-intent
+   copy served with the app itself. It reuses the same tokens, fonts, CRT
+   scanline and neon glow so the game and its "landing page" are one brand. */
+.about {
+  position: relative;
+  border-top: 2px solid var(--surface-2);
+  background:
+    repeating-linear-gradient(rgba(0, 0, 0, 0.04) 0 1px, rgba(0, 0, 0, 0) 1px 2px), var(--bg);
+}
+
+.about-inner {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 56px 24px 72px;
+}
+
+.about-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+/* Signature wordmark: the two lines carry the P1/P2 colors so the brand mark
+   echoes the two fighters. Top-left of the marketing section per the spec. */
+.wordmark {
+  font-family: var(--font-display);
+  font-size: clamp(28px, 5vw, 38px);
+  line-height: 1.35;
+  text-decoration: none;
+}
+
+.wordmark-line {
+  display: block;
+}
+
+.wordmark-line--p1 {
+  color: var(--accent);
+  text-shadow: 0 0 12px rgba(255, 46, 109, 0.6);
+}
+
+.wordmark-line--p2 {
+  color: var(--accent-support);
+  text-shadow: 0 0 12px rgba(41, 224, 255, 0.6);
+}
+
+.about-tagline {
+  max-width: 60ch;
+  margin: 32px 0 0;
+  font-size: 19px;
+  line-height: 1.6;
+  color: var(--text);
+}
+
+.about h2 {
+  margin: 56px 0 20px;
+  font-family: var(--font-display);
+  font-size: 19px;
+  color: var(--text);
+  text-transform: uppercase;
+  text-shadow: 0 0 10px rgba(41, 224, 255, 0.4);
+}
+
+/* Reusable neon buttons/links shared by the section (View on GitHub, CTAs). */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 12px 24px;
+  border-radius: 2px;
+  font-family: var(--font-ui);
+  font-size: 14px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    transform 150ms ease-out,
+    background-color 150ms ease-out,
+    color 150ms ease-out,
+    box-shadow 150ms ease-out;
+}
+
+.btn--primary {
+  border: 2px solid var(--accent);
+  background: var(--accent);
+  color: var(--bg);
+}
+
+.btn--primary:hover {
+  background: var(--bg);
+  color: var(--accent);
+  box-shadow: 0 0 16px var(--accent);
+}
+
+.btn:active {
+  transform: scale(0.96);
+}
+
+.btn:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 2px var(--bg),
+    0 0 12px var(--accent-support);
+}
+
+.feature-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.feature-list li {
+  padding: 20px;
+  background: var(--surface-1);
+  border: 2px solid var(--surface-2);
+  border-radius: 2px;
+  line-height: 1.6;
+  color: var(--text-muted);
+}
+
+.feature-list b {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--text);
+  font-weight: 700;
+}
+
+.about p {
+  max-width: 68ch;
+  line-height: 1.7;
+  color: var(--text-muted);
+}
+
+.controls-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+}
+
+.controls-grid table {
+  border-collapse: collapse;
+  min-width: 200px;
+  background: var(--surface-1);
+  border: 2px solid var(--accent);
+}
+
+.controls-grid table.p2 {
+  border-color: var(--accent-support);
+}
+
+.controls-grid caption {
+  padding: 8px;
+  font-family: var(--font-display);
+  font-size: 12px;
+  color: var(--text);
+  background: var(--surface-2);
+  text-transform: uppercase;
+}
+
+.controls-grid th,
+.controls-grid td {
+  padding: 8px 16px;
+  border-top: 1px solid var(--surface-2);
+  font-size: 14px;
+  text-align: left;
+}
+
+.controls-grid th {
+  color: var(--text-muted);
+  font-weight: normal;
+}
+
+.controls-grid td {
+  color: var(--text);
+  letter-spacing: 0.1em;
+}
+
+.faq {
+  margin: 0;
+}
+
+.faq dt {
+  margin-top: 20px;
+  color: var(--text);
+  font-weight: 700;
+}
+
+.faq dd {
+  margin: 8px 0 0;
+  max-width: 68ch;
+  line-height: 1.7;
+  color: var(--text-muted);
+}
+
+.about-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+  margin-top: 56px;
+  padding-top: 24px;
+  border-top: 1px solid var(--surface-2);
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.about-footer a {
+  color: var(--accent-support);
+}
+
+@media (max-width: 480px) {
+  .about-tagline {
+    font-size: 17px;
   }
 }

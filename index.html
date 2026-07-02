@@ -91,6 +91,148 @@
         </div>
       </div>
     </main>
+
+    <section class="about" id="about">
+      <div class="about-inner">
+        <header class="about-head">
+          <a class="wordmark" href="#app" aria-label="Ragdoll Rumble">
+            <span class="wordmark-line wordmark-line--p1">RAGDOLL</span>
+            <span class="wordmark-line wordmark-line--p2">RUMBLE</span>
+          </a>
+          <a class="btn btn--primary" href="https://github.com/ctkrug/ragdoll-rumble">
+            View on GitHub
+          </a>
+        </header>
+
+        <p class="about-tagline">
+          Two-player ragdoll brawls, right in your browser. Grab a friend, share a keyboard, and
+          knock each other's wobbly ragdolls off the arena. No install, no login, no second
+          controller.
+        </p>
+
+        <h2>What it is</h2>
+        <ul class="feature-list">
+          <li>
+            <b>Two players, one keyboard</b>
+            Player 1 throws punches, kicks, and lunges on F, G, and H. Player 2 answers on the /, .,
+            and , keys. Both sides share the same board with no split screen and no setup.
+          </li>
+          <li>
+            <b>Physics you can feel</b>
+            Every limb is a real point mass held together by hand-tuned constraints, so a solid hit
+            sends a ragdoll flailing, stumbling, and tipping over the edge instead of playing a
+            canned animation.
+          </li>
+          <li>
+            <b>A fresh arena every round</b>
+            Floors tilt and platforms shuffle from a random seed, so no two rounds play out the same
+            way. First to two round wins takes the match.
+          </li>
+          <li>
+            <b>It hits back</b>
+            A landed blow fires a screen shake, an impact flash, a brief freeze-frame, and a
+            synthesized sound effect. Win the match and the loser gets a rotating K.O. stamp and a
+            stats card.
+          </li>
+        </ul>
+
+        <h2>How to play</h2>
+        <p>
+          When the countdown clears and FIGHT appears, input unlocks. Spam your three attacks to
+          shove, topple, or fling your opponent. You win a round by knocking them off the arena or
+          pinning them flat on their back for about a second. First to two round wins takes the
+          match. Hit Rematch, or just throw any attack, to run it back. On a phone the keyboard
+          controls become on-screen Punch, Kick, and Lunge buttons for each player.
+        </p>
+        <div class="controls-grid">
+          <table>
+            <caption>
+              Player 1
+            </caption>
+            <tbody>
+              <tr>
+                <th scope="row">Punch</th>
+                <td>F</td>
+              </tr>
+              <tr>
+                <th scope="row">Kick</th>
+                <td>G</td>
+              </tr>
+              <tr>
+                <th scope="row">Lunge</th>
+                <td>H</td>
+              </tr>
+            </tbody>
+          </table>
+          <table class="p2">
+            <caption>
+              Player 2
+            </caption>
+            <tbody>
+              <tr>
+                <th scope="row">Punch</th>
+                <td>/</td>
+              </tr>
+              <tr>
+                <th scope="row">Kick</th>
+                <td>.</td>
+              </tr>
+              <tr>
+                <th scope="row">Lunge</th>
+                <td>,</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2>How it's built</h2>
+        <p>
+          There is no physics library here. The solver is written from scratch in TypeScript: Verlet
+          integration moves every point under gravity, then distance and angle constraints are
+          relaxed over several passes each frame to keep limbs attached and joints from bending
+          backward. Collision between the two ragdolls resolves inside that same relaxation loop,
+          which is what stops a tangle of limbs from exploding across the screen. The whole game is
+          one static build with no server, and the physics core ships with its own unit tests.
+        </p>
+
+        <h2>Questions</h2>
+        <dl class="faq">
+          <dt>Is Ragdoll Rumble free?</dt>
+          <dd>
+            Yes. It runs entirely in your browser, with no account, no download, and no payment.
+          </dd>
+          <dt>Can I play on my own?</dt>
+          <dd>
+            It is built for two people on one keyboard. There is no computer opponent yet, so it is
+            at its best with a friend sitting next to you.
+          </dd>
+          <dt>What are the controls?</dt>
+          <dd>
+            Player 1 uses F (punch), G (kick), and H (lunge). Player 2 uses / (punch), . (kick), and
+            , (lunge). On a phone, on-screen buttons replace the keys.
+          </dd>
+          <dt>Does it work on mobile?</dt>
+          <dd>
+            Yes. On a narrow screen the arena fills the top of the page and touch buttons for both
+            players sit along the bottom.
+          </dd>
+          <dt>How do you win a round?</dt>
+          <dd>
+            Knock your opponent off the edge of the arena, or pin them flat on their back for about
+            a second. First to two round wins takes the match.
+          </dd>
+        </dl>
+
+        <footer class="about-footer">
+          <span
+            >More by Charlie Krug &rarr;
+            <a href="https://apps.charliekrug.com">apps.charliekrug.com</a></span
+          >
+          <span><a href="https://github.com/ctkrug/ragdoll-rumble">Source on GitHub</a></span>
+        </footer>
+      </div>
+    </section>
+
     <script type="module" src="./src/main.ts"></script>
   </body>
 </html>
