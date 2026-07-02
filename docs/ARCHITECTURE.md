@@ -47,20 +47,35 @@ src/
   ui/
     touchControls.ts  wireTouchControls(): binds on-screen buttons (index.html) to the same
                        applyImpulse path as keyboard input, for the phone-width touch fallback.
+                       Gated on match phase the same way keyboard input is; takes an onImpulse
+                       hook so a landed tap can trigger shake/SFX like a keyboard hit does.
     hud.ts             formatScore()/phaseMessage()/matchOverTitle() (pure) plus
                        queryHudElements()/renderHud() (DOM glue): the round/score panels,
                        countdown, and match-over overlay text, synced from MatchState every frame.
+                       renderMuteToggle() is separate — it syncs from the audio engine's mute
+                       state, not MatchState, and only runs when that's toggled.
   render/
     canvas.ts         Stage setup: sizes the canvas backing store to devicePixelRatio.
     ragdoll.ts        Draws a Ragdoll's limbs (round-capped strokes) and head (filled circle).
     duel.ts           Clears the frame, draws the arena (floor line + platform bars), renders
-                       both ragdolls themed.
+                       both ragdolls themed, offset by an optional screen-shake vector.
+    screenShake.ts     ShakeState + triggerShake()/updateShake()/shakeOffset(): a decaying random
+                       offset per docs/DESIGN.md's motion tokens (<=120ms, <=6px). Pure/DOM-free;
+                       reduced-motion is a caller-supplied flag, not a matchMedia query in here.
+  audio/
+    sfx.ts             SfxEngine + playStep()/playSwing()/playImpact()/playKnockout()/
+                       playUiClick(): WebAudio oscillator/noise SFX per docs/DESIGN.md's juice
+                       plan, one shared master gain for muting, self-throttled per SFX name.
+                       ensureAudioContext() must run from a real user gesture (autoplay policy);
+                       every play* function no-ops without a context, so this is safe to import
+                       and call in Node (tests) or any environment with no window at all.
   main.ts             Wires it together: creates the stage + duel scene + match state + keyboard
-                      input + touch controls + HUD, runs a fixed-timestep (1/60s) accumulator
-                      loop that gates player input on match phase, steps physics, advances the
-                      match from koDetection's signals, and rebuilds the scene each new round.
+                      input + touch controls + HUD + shake state + SFX engine, runs a
+                      fixed-timestep (1/60s) accumulator loop that gates player input on match
+                      phase, steps physics, advances the match from koDetection's signals,
+                      triggers shake/SFX on hits and knockouts, and rebuilds the scene each round.
   style.css           Design tokens (docs/DESIGN.md) as CSS variables, CRT scanline/vignette,
-                      touch control + HUD + match-overlay theming.
+                      touch control + HUD + match-overlay + mute-toggle theming.
 ```
 
 Tests mirror this layout 1:1 under `tests/` (`tests/physics/`, `tests/arena/`, `tests/ragdoll/`,
@@ -74,26 +89,30 @@ Tests mirror this layout 1:1 under `tests/` (`tests/physics/`, `tests/arena/`, `
    wires the touch buttons via `wireTouchControls`, and looks up the HUD's DOM elements via
    `queryHudElements`.
 2. Each fixed tick, input is gated on `match.phase`: only `"fighting"` calls `applyPlayerActions`
-   (edge-triggered punch/kick/lunge → `applyImpulse`, aimed at the opponent's current position);
-   other phases still drain queued key presses via `resolveActions` so a trailing hit doesn't fire
-   the instant the round resumes, and a punch/kick/lunge from either player during `"matchOver"`
-   is read as a rematch request instead. Touch buttons bypass the polling step entirely and call
-   `applyImpulse` directly on `pointerdown`.
-3. `stepDuel(scene, 1/60)` runs (see below), then `advanceMatch(match, ko, 1/60)` — fed
-   `isOffArena`/`isPinnedFlat` read against the now-stepped scene — advances the countdown timer,
-   the pin-on-back accumulator, and phase transitions. When a `"roundOver"` → `"countdown"`
-   transition is observed, `main.ts` rebuilds the `DuelScene` with a fresh random seed so every
-   round's arena varies, not just every match's.
+   (edge-triggered punch/kick/lunge → `applyImpulse`, aimed at the opponent's current position,
+   returning which actions fired); other phases still drain queued key presses via
+   `resolveActions` so a trailing hit doesn't fire the instant the round resumes, and a
+   punch/kick/lunge from either player during `"matchOver"` is read as a rematch request instead.
+   Touch buttons bypass the polling step entirely, call `applyImpulse` directly on `pointerdown`
+   (also phase-gated), and fire the same `onImpulse` hook. Either path landing a hit calls
+   `triggerShake` and `playImpact`.
+3. `stepDuel(scene, 1/60)` runs (see below), `updateShake` ages the shake timer down, then
+   `advanceMatch(match, ko, 1/60)` — fed `isOffArena`/`isPinnedFlat` read against the now-stepped
+   scene — advances the countdown timer, the pin-on-back accumulator, and phase transitions. A
+   `"fighting"` → `"roundOver"` transition (a real KO, not the initial mount) fires
+   `playKnockout`; a `"roundOver"` → `"countdown"` transition rebuilds the `DuelScene` with a
+   fresh random seed so every round's arena varies, not just every match's.
 4. `stepDuel` → `solver.step`: integrates every point under gravity, then runs
    `CONSTRAINT_ITERATIONS` (12) rounds of: satisfy every bone (`DistanceConstraint`), satisfy
    every joint limit (`AngleConstraint`), run `World.onIteration` (ragdoll-vs-ragdoll capsule
    collision), then clamp every point against every `World.geometry` segment (the arena's floor
    and platforms) via `resolveSegmentCollision`, with friction.
-5. `renderDuelScene` clears to the background color, draws the arena (the floor as a thin glowing
-   line, platforms as thicker square-capped bars with a bright top edge), and calls
-   `renderRagdoll` for each rig, which strokes every `Limb` as a round-capped line sized to its
-   collision radius and fills the head as a circle. `renderHud` then syncs the score panels,
-   round/countdown text, and match-over overlay to the current `MatchState`.
+5. `renderDuelScene` clears to the background color, then — inside a save/translate/restore offset
+   by `shakeOffset(shake, prefersReducedMotion)` — draws the arena (the floor as a thin glowing
+   line, platforms as thicker square-capped bars with a bright top edge) and calls `renderRagdoll`
+   for each rig, which strokes every `Limb` as a round-capped line sized to its collision radius
+   and fills the head as a circle. `renderHud` then syncs the score panels, round/countdown text,
+   and match-over overlay to the current `MatchState`.
 
 ## Key design decisions and gotchas
 
@@ -169,6 +188,15 @@ Tests mirror this layout 1:1 under `tests/` (`tests/physics/`, `tests/arena/`, `
 - **A simultaneous KO is scored as a draw round**, not resolved by an arbitrary priority order —
   `advanceMatch` checks `koA === koB` before assigning `roundWinner`. The round still ends and a
   new one starts; neither player's score moves.
+- **Shake and `playImpact` trigger on a thrown action, not a confirmed "landed" hit.** Impulses
+  are aimed at the opponent but never checked for actually connecting (see `duel/impulse.ts`'s
+  aim-and-nudge model), so there's no discrete "this hit connected" event to key off. Firing on
+  every thrown punch/kick/lunge instead still meets D2's "input -> visible response in <100ms" —
+  it's honest player-agency feedback, just not proof of a landed blow.
+- **`playSwing` and `playStep` are implemented and tested but not wired into gameplay.** Swing was
+  meant for a miss specifically, which needs the same "did it connect" signal noted above that
+  doesn't exist yet; step needs a locomotion mechanic, which this ragdoll doesn't have (see the
+  "no active balance/muscle control" gotcha above). Both are ready to wire in once either lands.
 
 ## Running it
 
