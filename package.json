@@ -1,0 +1,24 @@
+{
+  "name": "ragdoll-rumble",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A slapstick physics duel powered by a from-scratch Verlet/constraint solver.",
+  "type": "module",
+  "license": "MIT",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint ."
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.9.0",
+    "eslint": "^9.9.0",
+    "typescript": "^5.5.4",
+    "typescript-eslint": "^8.3.0",
+    "vite": "^5.4.2",
+    "vitest": "^2.0.5"
+  }
+}
