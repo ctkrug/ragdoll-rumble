@@ -44,13 +44,14 @@ describe("resolveCapsuleCollision", () => {
     const capsuleA = createCapsule(a1, a2, 5);
     const capsuleB = createCapsule(b1, b2, 5);
 
-    resolveCapsuleCollision(capsuleA, capsuleB);
+    const collided = resolveCapsuleCollision(capsuleA, capsuleB);
 
     const dist = length(sub(b1.pos, a1.pos));
     expect(dist).toBeCloseTo(10);
+    expect(collided).toBe(true);
   });
 
-  it("leaves capsules further apart than the combined radius untouched", () => {
+  it("leaves capsules further apart than the combined radius untouched and reports no contact", () => {
     const a1 = createPoint({ x: 0, y: 0 });
     const a2 = createPoint({ x: 0, y: 10 });
     const b1 = createPoint({ x: 100, y: 0 });
@@ -58,10 +59,11 @@ describe("resolveCapsuleCollision", () => {
     const capsuleA = createCapsule(a1, a2, 5);
     const capsuleB = createCapsule(b1, b2, 5);
 
-    resolveCapsuleCollision(capsuleA, capsuleB);
+    const collided = resolveCapsuleCollision(capsuleA, capsuleB);
 
     expect(a1.pos).toEqual({ x: 0, y: 0 });
     expect(b1.pos).toEqual({ x: 100, y: 0 });
+    expect(collided).toBe(false);
   });
 
   it("resolves overlapping circles (degenerate capsules) symmetrically", () => {

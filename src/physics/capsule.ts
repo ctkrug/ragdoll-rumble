@@ -61,9 +61,11 @@ export function closestPointsBetweenSegments(
  * Pushes two overlapping capsules apart along the line between their closest
  * points, distributing the correction across each capsule's endpoints by how
  * close each one is to the contact point (mirrors satisfyDistanceConstraint's
- * pinned-aware split).
+ * pinned-aware split). Returns whether the capsules were actually overlapping
+ * (and so a correction was applied) — callers use this as a genuine-contact
+ * signal, e.g. to distinguish a thrown punch that landed from one that missed.
  */
-export function resolveCapsuleCollision(capsuleA: Capsule, capsuleB: Capsule): void {
+export function resolveCapsuleCollision(capsuleA: Capsule, capsuleB: Capsule): boolean {
   const { s, t } = closestPointsBetweenSegments(
     capsuleA.a.pos,
     capsuleA.b.pos,
@@ -76,7 +78,7 @@ export function resolveCapsuleCollision(capsuleA: Capsule, capsuleB: Capsule): v
   const delta = sub(c2, c1);
   const dist = length(delta);
   const minDist = capsuleA.radius + capsuleB.radius;
-  if (dist === 0 || dist >= minDist) return;
+  if (dist === 0 || dist >= minDist) return false;
 
   const normal = scale(delta, 1 / dist);
   const overlap = minDist - dist;
@@ -84,6 +86,7 @@ export function resolveCapsuleCollision(capsuleA: Capsule, capsuleB: Capsule): v
 
   applyWeightedPush(capsuleA.a, capsuleA.b, s, scale(push, -1));
   applyWeightedPush(capsuleB.a, capsuleB.b, t, push);
+  return true;
 }
 
 function applyWeightedPush(a: VerletPoint, b: VerletPoint, t: number, push: Vec2): void {
