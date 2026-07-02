@@ -38,19 +38,29 @@ src/
     controls.ts        ControlScheme + resolveActions()/applyPlayerActions()/facingDirection():
                        maps a player's keymap to edge-triggered actions and aims them at the
                        opponent's current position.
+    koDetection.ts     isOffArena()/isPinnedFlat(): frame-level knockout signals read against a
+                       Ragdoll + Arena — flung past the playable edge, or lying flat near the
+                       floor. Stateless; round.ts owns the pin timer these feed.
+    round.ts           MatchState + advanceMatch(): the countdown -> fighting -> roundOver ->
+                       (next countdown | matchOver) state machine, scoring, and the pin-on-back
+                       accumulator. Mutates its state argument in place like solver.step.
   ui/
     touchControls.ts  wireTouchControls(): binds on-screen buttons (index.html) to the same
                        applyImpulse path as keyboard input, for the phone-width touch fallback.
+    hud.ts             formatScore()/phaseMessage()/matchOverTitle() (pure) plus
+                       queryHudElements()/renderHud() (DOM glue): the round/score panels,
+                       countdown, and match-over overlay text, synced from MatchState every frame.
   render/
     canvas.ts         Stage setup: sizes the canvas backing store to devicePixelRatio.
     ragdoll.ts        Draws a Ragdoll's limbs (round-capped strokes) and head (filled circle).
     duel.ts           Clears the frame, draws the arena (floor line + platform bars), renders
                        both ragdolls themed.
-  main.ts             Wires it together: creates the stage + duel scene + keyboard input + touch
-                      controls, runs a fixed-timestep (1/60s) accumulator loop that polls both
-                      players' actions before each physics step, rebuilds the scene on resize.
+  main.ts             Wires it together: creates the stage + duel scene + match state + keyboard
+                      input + touch controls + HUD, runs a fixed-timestep (1/60s) accumulator
+                      loop that gates player input on match phase, steps physics, advances the
+                      match from koDetection's signals, and rebuilds the scene each new round.
   style.css           Design tokens (docs/DESIGN.md) as CSS variables, CRT scanline/vignette,
-                      touch control button theming.
+                      touch control + HUD + match-overlay theming.
 ```
 
 Tests mirror this layout 1:1 under `tests/` (`tests/physics/`, `tests/arena/`, `tests/ragdoll/`,
@@ -60,21 +70,30 @@ Tests mirror this layout 1:1 under `tests/` (`tests/physics/`, `tests/arena/`, `
 
 1. `main.ts` builds a `Stage` (canvas + 2D context sized to devicePixelRatio), a `DuelScene`
    (an `Arena` generated from a seed, plus two `Ragdoll`s sharing one physics `World`), a
-   `KeyboardInput` on `window`, and wires the touch buttons via `wireTouchControls`.
-2. Each animation frame, the fixed-timestep accumulator polls each player's `ControlScheme`
-   (`applyPlayerActions`) — any edge-triggered punch/kick/lunge becomes an `applyImpulse` call on
-   that player's ragdoll, aimed at the opponent's current position — then calls
-   `stepDuel(scene, 1/60)` zero or more times, then renders once. Touch buttons bypass the polling
-   step and call `applyImpulse` directly on `pointerdown`, since a tap is already a discrete event.
-3. `stepDuel` → `solver.step`: integrates every point under gravity, then runs
+   `MatchState` (`createMatchState`, starts in `"countdown"`), a `KeyboardInput` on `window`,
+   wires the touch buttons via `wireTouchControls`, and looks up the HUD's DOM elements via
+   `queryHudElements`.
+2. Each fixed tick, input is gated on `match.phase`: only `"fighting"` calls `applyPlayerActions`
+   (edge-triggered punch/kick/lunge → `applyImpulse`, aimed at the opponent's current position);
+   other phases still drain queued key presses via `resolveActions` so a trailing hit doesn't fire
+   the instant the round resumes, and a punch/kick/lunge from either player during `"matchOver"`
+   is read as a rematch request instead. Touch buttons bypass the polling step entirely and call
+   `applyImpulse` directly on `pointerdown`.
+3. `stepDuel(scene, 1/60)` runs (see below), then `advanceMatch(match, ko, 1/60)` — fed
+   `isOffArena`/`isPinnedFlat` read against the now-stepped scene — advances the countdown timer,
+   the pin-on-back accumulator, and phase transitions. When a `"roundOver"` → `"countdown"`
+   transition is observed, `main.ts` rebuilds the `DuelScene` with a fresh random seed so every
+   round's arena varies, not just every match's.
+4. `stepDuel` → `solver.step`: integrates every point under gravity, then runs
    `CONSTRAINT_ITERATIONS` (12) rounds of: satisfy every bone (`DistanceConstraint`), satisfy
    every joint limit (`AngleConstraint`), run `World.onIteration` (ragdoll-vs-ragdoll capsule
    collision), then clamp every point against every `World.geometry` segment (the arena's floor
    and platforms) via `resolveSegmentCollision`, with friction.
-4. `renderDuelScene` clears to the background color, draws the arena (the floor as a thin glowing
+5. `renderDuelScene` clears to the background color, draws the arena (the floor as a thin glowing
    line, platforms as thicker square-capped bars with a bright top edge), and calls
    `renderRagdoll` for each rig, which strokes every `Limb` as a round-capped line sized to its
-   collision radius and fills the head as a circle.
+   collision radius and fills the head as a circle. `renderHud` then syncs the score panels,
+   round/countdown text, and match-over overlay to the current `MatchState`.
 
 ## Key design decisions and gotchas
 
@@ -137,6 +156,19 @@ Tests mirror this layout 1:1 under `tests/` (`tests/physics/`, `tests/arena/`, `
   amount (tens of pixels) before friction damps it out, because the iterative (Gauss-Seidel)
   solver has a solve-order bias that doesn't perfectly cancel. It's not runaway, but it isn't
   zero either — revisit if Epic 1's stiffness/damping/iteration tuning pass calls for it.
+- **"Off-arena" is a viewport-edge margin, not a physics boundary.** The floor spans the arena's
+  full width and always catches a grounded ragdoll (see the platform-suck-up gotcha above), so it
+  can't literally fall off in x. `isOffArena` instead treats a mid-air fling past the visible edge
+  (with a small margin) as a KO — catching the moment a hit sends someone off-screen, before
+  gravity would otherwise bring them back down onto the same floor.
+- **`isPinnedFlat` only checks the floor, not platforms.** Uprightness (torso near-horizontal) and
+  height above `floorHeightAt` are cheap, frame-local signals; getting pinned while resting on a
+  platform isn't a mechanic yet, so a flat-on-a-platform pose won't accumulate the pin timer. The
+  pin timer itself lives in `round.ts`'s `MatchState`, not `koDetection.ts`, since it has to
+  persist and reset across frames — `isPinnedFlat` is just this instant's true/false input to it.
+- **A simultaneous KO is scored as a draw round**, not resolved by an arbitrary priority order —
+  `advanceMatch` checks `koA === koB` before assigning `roundWinner`. The round still ends and a
+  new one starts; neither player's score moves.
 
 ## Running it
 
