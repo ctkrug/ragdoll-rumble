@@ -32,7 +32,10 @@ src/
   duel/
     scene.ts          createDuelScene()/stepDuel(): generates an Arena from a seed, lays out two
                        ragdolls on its floor, and wires ragdoll-vs-ragdoll capsule collision into
-                       the solver's iteration loop via World.onIteration.
+                       the solver's iteration loop via World.onIteration. Each stepDuel call also
+                       recomputes DuelScene.contactThisStep/contactPoint — whether (and roughly
+                       where) a limb pair actually overlapped that step, the real "did a swing
+                       land" signal the game loop keys shake/flash/SFX/hitstop off of.
     impulse.ts         applyImpulse(): nudges the limb point for a punch/kick/lunge directly
                        (a Verlet velocity kick, the opposite of a stiffness-relaxed correction).
     controls.ts        ControlScheme + resolveActions()/applyPlayerActions()/facingDirection():
@@ -44,24 +47,36 @@ src/
     round.ts           MatchState + advanceMatch(): the countdown -> fighting -> roundOver ->
                        (next countdown | matchOver) state machine, scoring, and the pin-on-back
                        accumulator. Mutates its state argument in place like solver.step.
+                       recordLandedHit() bumps MatchState.totalHitsLanded, a plain counter the
+                       win overlay reads back as a stat.
   ui/
     touchControls.ts  wireTouchControls(): binds on-screen buttons (index.html) to the same
                        applyImpulse path as keyboard input, for the phone-width touch fallback.
                        Gated on match phase the same way keyboard input is; takes an onImpulse
-                       hook so a landed tap can trigger shake/SFX like a keyboard hit does.
-    hud.ts             formatScore()/phaseMessage()/matchOverTitle() (pure) plus
-                       queryHudElements()/renderHud() (DOM glue): the round/score panels,
-                       countdown, and match-over overlay text, synced from MatchState every frame.
+                       hook that fires on every thrown tap (a swing sound), not a landed hit —
+                       main.ts checks contactThisStep on the next physics step for that.
+    hud.ts             formatScore()/phaseMessage()/matchOverTitle()/matchStatsText() (pure) plus
+                       queryHudElements()/renderHud()/triggerWinCelebration() (DOM glue): the
+                       round/score panels, countdown, and match-over overlay (title, stats line,
+                       K.O. stamp, particle burst) synced from MatchState every frame.
                        renderMuteToggle() is separate — it syncs from the audio engine's mute
                        state, not MatchState, and only runs when that's toggled.
+                       triggerWinCelebration() is also one-shot (main.ts calls it exactly once on
+                       the roundOver->matchOver transition), since it replaces the DOM particle
+                       burst — calling it every frame would restart the animation every frame.
   render/
     canvas.ts         Stage setup: sizes the canvas backing store to devicePixelRatio.
     ragdoll.ts        Draws a Ragdoll's limbs (round-capped strokes) and head (filled circle).
     duel.ts           Clears the frame, draws the arena (floor line + platform bars), renders
-                       both ragdolls themed, offset by an optional screen-shake vector.
+                       both ragdolls themed, offset by an optional screen-shake vector, then an
+                       optional impact flash on top.
     screenShake.ts     ShakeState + triggerShake()/updateShake()/shakeOffset(): a decaying random
                        offset per docs/DESIGN.md's motion tokens (<=120ms, <=6px). Pure/DOM-free;
                        reduced-motion is a caller-supplied flag, not a matchMedia query in here.
+    impactFlash.ts     ImpactFlashState + triggerFlash()/updateFlash()/flashVisual(): a growing,
+                       fading white radial burst centered on DuelScene.contactPoint, same
+                       decaying-state shape as screenShake.ts. ~100ms per docs/DESIGN.md's
+                       game-feedback token.
   audio/
     sfx.ts             SfxEngine + playStep()/playSwing()/playImpact()/playKnockout()/
                        playUiClick(): WebAudio oscillator/noise SFX per docs/DESIGN.md's juice
@@ -69,17 +84,23 @@ src/
                        ensureAudioContext() must run from a real user gesture (autoplay policy);
                        every play* function no-ops without a context, so this is safe to import
                        and call in Node (tests) or any environment with no window at all.
+                       playStep is still unwired (no locomotion mechanic to key it off); playSwing
+                       is now wired to every thrown punch/kick/lunge (see duel/scene.ts above).
   main.ts             Wires it together: creates the stage + duel scene + match state + keyboard
-                      input + touch controls + HUD + shake state + SFX engine, runs a
-                      fixed-timestep (1/60s) accumulator loop that gates player input on match
-                      phase, steps physics, advances the match from koDetection's signals,
-                      triggers shake/SFX on hits and knockouts, and rebuilds the scene each round.
+                      input + touch controls + HUD + shake state + impact-flash state + SFX
+                      engine, runs a fixed-timestep (1/60s) accumulator loop that gates player
+                      input on match phase, freezes physics during "countdown", steps physics,
+                      advances the match from koDetection's signals, triggers shake/flash/SFX/a
+                      brief hitstop freeze on a confirmed landed hit (not just a thrown swing),
+                      fires the win celebration once on match-over, and rebuilds the scene each
+                      round.
   style.css           Design tokens (docs/DESIGN.md) as CSS variables, CRT scanline/vignette,
-                      touch control + HUD + match-overlay + mute-toggle theming.
+                      touch control + HUD + match-overlay (K.O. stamp, stats, particles) +
+                      mute-toggle theming.
 ```
 
 Tests mirror this layout 1:1 under `tests/` (`tests/physics/`, `tests/arena/`, `tests/ragdoll/`,
-`tests/duel/`, `tests/input/`, `tests/ui/`).
+`tests/duel/`, `tests/input/`, `tests/ui/`, `tests/render/`).
 
 ## Data flow
 
@@ -94,25 +115,34 @@ Tests mirror this layout 1:1 under `tests/` (`tests/physics/`, `tests/arena/`, `
    `resolveActions` so a trailing hit doesn't fire the instant the round resumes, and a
    punch/kick/lunge from either player during `"matchOver"` is read as a rematch request instead.
    Touch buttons bypass the polling step entirely, call `applyImpulse` directly on `pointerdown`
-   (also phase-gated), and fire the same `onImpulse` hook. Either path landing a hit calls
-   `triggerShake` and `playImpact`.
-3. `stepDuel(scene, 1/60)` runs (see below), `updateShake` ages the shake timer down, then
-   `advanceMatch(match, ko, 1/60)` — fed `isOffArena`/`isPinnedFlat` read against the now-stepped
-   scene — advances the countdown timer, the pin-on-back accumulator, and phase transitions. A
-   `"fighting"` → `"roundOver"` transition (a real KO, not the initial mount) fires
+   (also phase-gated), and fire the same `onImpulse` hook. Either path throwing a swing plays
+   `playSwing` immediately; whether it actually connects is checked after the physics step below.
+3. Physics is frozen during `"countdown"` (see the gotcha below); otherwise `stepDuel(scene, 1/60)`
+   runs (see below). If the swing thrown this tick resolved as real ragdoll-vs-ragdoll contact
+   (`scene.contactThisStep`), that's a landed hit: `triggerShake`, `triggerFlash` (at
+   `scene.contactPoint`), `playImpact`, `recordLandedHit`, and a ~45ms hitstop all fire, and the
+   rest of this tick's match-advancement is skipped (the freeze picks it back up next tick).
+   Otherwise `advanceMatch(match, ko, 1/60)` — fed `isOffArena`/`isPinnedFlat` read against the
+   now-stepped scene — advances the countdown timer, the pin-on-back accumulator, and phase
+   transitions. A `"fighting"` → `"roundOver"` transition (a real KO, not the initial mount) fires
    `playKnockout`; a `"roundOver"` → `"countdown"` transition rebuilds the `DuelScene` with a
-   fresh random seed so every round's arena varies, not just every match's.
+   fresh random seed so every round's arena varies, not just every match's; a transition into
+   `"matchOver"` fires `triggerWinCelebration` once.
 4. `stepDuel` → `solver.step`: integrates every point under gravity, then runs
    `CONSTRAINT_ITERATIONS` (12) rounds of: satisfy every bone (`DistanceConstraint`), satisfy
    every joint limit (`AngleConstraint`), run `World.onIteration` (ragdoll-vs-ragdoll capsule
-   collision), then clamp every point against every `World.geometry` segment (the arena's floor
-   and platforms) via `resolveSegmentCollision`, with friction.
-5. `renderDuelScene` clears to the background color, then — inside a save/translate/restore offset
-   by `shakeOffset(shake, prefersReducedMotion)` — draws the arena (the floor as a thin glowing
-   line, platforms as thicker square-capped bars with a bright top edge) and calls `renderRagdoll`
-   for each rig, which strokes every `Limb` as a round-capped line sized to its collision radius
-   and fills the head as a circle. `renderHud` then syncs the score panels, round/countdown text,
-   and match-over overlay to the current `MatchState`.
+   collision, which also updates `contactThisStep`/`contactPoint`), then clamp every point against
+   every `World.geometry` segment (the arena's floor and platforms) via `resolveSegmentCollision`,
+   with friction.
+5. Screen shake and the impact flash update once per rendered frame using real elapsed time (not
+   the fixed physics timestep), so they keep animating smoothly through a hitstop freeze even
+   though physics itself is paused. `renderDuelScene` clears to the background color, then —
+   inside a save/translate/restore offset by `shakeOffset(shake, prefersReducedMotion)` — draws
+   the arena (the floor as a thin glowing line, platforms as thicker square-capped bars with a
+   bright top edge), calls `renderRagdoll` for each rig (strokes every `Limb` as a round-capped
+   line sized to its collision radius, fills the head as a circle), then the impact flash on top.
+   `renderHud` then syncs the score panels, round/countdown text, and match-over overlay
+   (title/stats/particles) to the current `MatchState`.
 
 ## Key design decisions and gotchas
 
@@ -188,15 +218,22 @@ Tests mirror this layout 1:1 under `tests/` (`tests/physics/`, `tests/arena/`, `
 - **A simultaneous KO is scored as a draw round**, not resolved by an arbitrary priority order —
   `advanceMatch` checks `koA === koB` before assigning `roundWinner`. The round still ends and a
   new one starts; neither player's score moves.
-- **Shake and `playImpact` trigger on a thrown action, not a confirmed "landed" hit.** Impulses
-  are aimed at the opponent but never checked for actually connecting (see `duel/impulse.ts`'s
-  aim-and-nudge model), so there's no discrete "this hit connected" event to key off. Firing on
-  every thrown punch/kick/lunge instead still meets D2's "input -> visible response in <100ms" —
-  it's honest player-agency feedback, just not proof of a landed blow.
-- **`playSwing` and `playStep` are implemented and tested but not wired into gameplay.** Swing was
-  meant for a miss specifically, which needs the same "did it connect" signal noted above that
-  doesn't exist yet; step needs a locomotion mechanic, which this ragdoll doesn't have (see the
-  "no active balance/muscle control" gotcha above). Both are ready to wire in once either lands.
+- **A landed hit is "swing thrown this tick AND `contactThisStep` resolved true," not just a
+  thrown action.** `resolveCapsuleCollision`/`resolveRagdollCollisions` now return whether they
+  actually found an overlap (plus its midpoint), so `duel/scene.ts` can surface a real "did this
+  connect" signal instead of assuming every punch/kick/lunge lands. `playSwing` fires on every
+  throw (keyboard or touch) for immediate input feedback; shake/flash/`playImpact`/hitstop only
+  fire once the following physics step confirms contact. A swing thrown while the ragdolls are
+  already overlapping (e.g. mid-grapple) still reads as a hit — there's no way yet to tell "this
+  specific punch reached" from "we were already touching when it was thrown."
+- **`playStep` is still unwired** — there's no locomotion mechanic to key it off (see the "no
+  active balance/muscle control" gotcha above).
+- **Physics is frozen during `"countdown"`** (`main.ts` skips `stepDuel` while `match.phase ===
+"countdown"`). It used to run unconditionally every tick, so the full 3-second "3..2..1..FIGHT!"
+  window let gravity collapse both standing ragdolls before a single input was accepted (no active
+  balance — see above) — occasionally far enough to trigger an instant pin-KO or off-arena draw
+  the moment `"fighting"` began, before either player could act. Freezing the spawn pose until
+  `"fighting"` starts means a round's outcome depends on what the players actually do.
 
 ## Running it
 
