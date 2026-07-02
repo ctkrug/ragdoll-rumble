@@ -8,6 +8,7 @@ export interface HudElements {
   overlay: HTMLElement;
   overlayTitle: HTMLElement;
   rematchButton: HTMLButtonElement;
+  muteToggle: HTMLButtonElement;
 }
 
 function playerNumber(player: Player): 1 | 2 {
@@ -58,7 +59,14 @@ export function queryHudElements(root: ParentNode): HudElements {
     overlay: get("#match-overlay"),
     overlayTitle: get("#match-overlay-title"),
     rematchButton: get<HTMLButtonElement>("#rematch-button"),
+    muteToggle: get<HTMLButtonElement>("#mute-toggle"),
   };
+}
+
+/** Syncs the mute button's label and a11y state; called whenever mute is toggled, not every frame. */
+export function renderMuteToggle(button: HTMLButtonElement, muted: boolean): void {
+  button.textContent = muted ? "Sound: Off" : "Sound: On";
+  button.setAttribute("aria-pressed", String(muted));
 }
 
 /** Syncs the HUD's DOM to the current match state; cheap enough to call once per rendered frame. */
