@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { COUNTDOWN_SECONDS, createMatchState } from "../../src/duel/round";
-import { formatScore, matchOverTitle, matchStatsText, phaseMessage } from "../../src/ui/hud";
+import {
+  formatScore,
+  matchOverTitle,
+  matchStatsText,
+  phaseMessage,
+  queryHudElements,
+} from "../../src/ui/hud";
 
 describe("formatScore", () => {
   it("renders 0 wins as all empty pips", () => {
@@ -85,5 +91,13 @@ describe("matchStatsText", () => {
     const state = createMatchState();
     state.totalHitsLanded = 0;
     expect(matchStatsText(state)).toBe("1 ROUND · 0 HITS LANDED");
+  });
+});
+
+describe("queryHudElements", () => {
+  it("throws a clear, selector-naming error when required markup is missing", () => {
+    const emptyRoot = { querySelector: () => null } as unknown as ParentNode;
+
+    expect(() => queryHudElements(emptyRoot)).toThrow("#score-a");
   });
 });
