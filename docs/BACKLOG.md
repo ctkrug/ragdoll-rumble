@@ -62,31 +62,38 @@ Turn two rigged ragdolls into an actual playable match.
       fixed a real physics bug this depended on: platforms were sucking in any point below them
       from any distance rather than only a genuine crossing, flinging every ragdoll into orbit
       within a couple of frames — see `docs/ARCHITECTURE.md`'s `resolveSegmentCollision` gotcha.
-- [ ] Design polish: tune impulse magnitudes in `duel/impulse.ts` against the settled-heap look
-      from Epic 1 so a punch/kick/lunge reads as a clear, deliberate hit rather than a twitch —
-      win conditions now make a "hit" mean something (this run's KO detection), so this is
-      playtestable; the current pin threshold (`PIN_THRESHOLD_SECONDS` in `round.ts`) and KO
-      geometry (`koDetection.ts`) may also need retuning once impulses change.
+- [x] Design polish: playtested impulse magnitudes in `duel/impulse.ts` against real matches.
+      The magnitudes themselves read fine — a punch/kick/lunge lands as a clear, deliberate hit,
+      and a flurry can realistically fling a ragdoll off-arena within a few exchanges, which
+      matches the "slapstick" brief. What actually needed fixing wasn't the impulses: `main.ts`
+      stepped physics unconditionally every tick, including through the 3-second countdown, so
+      with no active balance (Epic 1) both ragdolls could collapse — sometimes hard enough to
+      trigger an instant pin-KO or off-arena draw — before `"fighting"` ever unlocked input.
+      Freezing physics during `"countdown"` (`docs/ARCHITECTURE.md`'s gotcha) fixed that; no pin
+      threshold or KO geometry retuning was needed once round outcomes reflected real play.
 
 ## Epic 4 — Juice & ship
 
 Make it feel good and get it in front of people.
 
 - [x] Movement tweening: already inherent — every limb is a real Verlet point rendered every
-      frame, so motion is continuous, never a teleport. Impact feedback: landed. Screen shake
-      (`src/render/screenShake.ts`, ≤120ms/≤6px per `docs/DESIGN.md`, `prefers-reduced-motion`
-      aware) fires on every landed keyboard/touch hit (`main.ts`). Still open from the juice
-      plan's impact-feedback bullet: the white impact-point flash and the ~40ms hitstop.
+      frame, so motion is continuous, never a teleport. Impact feedback, fully landed this pass:
+      screen shake (`src/render/screenShake.ts`, ≤120ms/≤6px per `docs/DESIGN.md`,
+      `prefers-reduced-motion` aware), an impact flash at the point of contact
+      (`src/render/impactFlash.ts`), and a ~45ms hitstop freeze-frame (`main.ts`) — all three now
+      fire only on a confirmed landed hit (`DuelScene.contactThisStep`), not just a thrown swing.
 - [x] WebAudio-synthesized SFX (`src/audio/sfx.ts`): step/swing/impact/knockout/uiClick
       oscillator+noise SFX, one shared gain node, self-throttled, mute toggle in the HUD
       persisted to `localStorage`, `AudioContext` created lazily on first user gesture. Wired
-      into gameplay: `playImpact` on a landed hit, `playKnockout` on a real KO, `playUiClick` on
-      the mute/rematch buttons. `playStep` and `playSwing` exist and are tested but aren't wired
-      up — see `docs/ARCHITECTURE.md`'s gotcha (no locomotion mechanic for step; no landed-hit
-      signal to distinguish a swing from a connect for swing).
-- [ ] Win celebration overlay (match stats, particles, rematch CTA) plus `prefers-reduced-motion`
-      support throughout. The match-over overlay + rematch CTA already exist (Epic 3's round flow
-      story); still open: match stats, the pixel-particle burst, and the K.O. stamp-card moment
-      `docs/DESIGN.md`'s signature-detail section describes.
+      into gameplay: `playSwing` on every thrown punch/kick/lunge, `playImpact` on a confirmed
+      landed hit, `playKnockout` on a real KO, `playUiClick` on the mute/rematch buttons.
+      `playStep` is still unwired — no locomotion mechanic to key it off (see
+      `docs/ARCHITECTURE.md`'s gotcha).
+- [x] Win celebration overlay (match stats, particles, rematch CTA) plus `prefers-reduced-motion`
+      support throughout. The overlay now leads with a rotated "K.O." stamp-card moment that
+      thumps into place, a stats line (rounds played, total hits landed via
+      `MatchState.totalHitsLanded`), and a particle burst themed to the winner's color
+      (`src/ui/hud.ts`'s `triggerWinCelebration`), before the existing title + rematch CTA.
+      Reduced motion drops the stamp animation and particles, keeps the text.
 - [ ] Design polish: bring the landing/site page (`site/`) to the same brand and tokens as the
       in-game UI, and verify the static build serves correctly from a subpath.
