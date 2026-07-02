@@ -1,14 +1,19 @@
 import "./style.css";
 import { createStage } from "./render/canvas";
-import { createChainWorld } from "./demo/chain";
-import { renderChain } from "./demo/render";
-import { step } from "./physics/solver";
+import { createDuelScene, stepDuel } from "./duel/scene";
+import { renderDuelScene } from "./render/duel";
 
 const canvas = document.querySelector<HTMLCanvasElement>("#stage");
 if (!canvas) throw new Error("#stage canvas not found");
 
 const stage = createStage(canvas);
-const world = createChainWorld(stage.width / 2, 80, 12, 28);
+let scene = createDuelScene(stage.width, stage.height);
+
+// createStage already resizes the canvas backing store on window resize;
+// rebuild the scene afterward so ragdoll scale tracks the new arena size.
+window.addEventListener("resize", () => {
+  scene = createDuelScene(stage.width, stage.height);
+});
 
 const FIXED_DT = 1 / 60;
 let lastTime = performance.now();
@@ -19,11 +24,11 @@ function tick(now: number): void {
   lastTime = now;
 
   while (accumulator >= FIXED_DT) {
-    step(world, FIXED_DT);
+    stepDuel(scene, FIXED_DT);
     accumulator -= FIXED_DT;
   }
 
-  renderChain(stage, world);
+  renderDuelScene(stage, scene);
   requestAnimationFrame(tick);
 }
 
